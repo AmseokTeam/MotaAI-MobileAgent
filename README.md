@@ -26,10 +26,65 @@
 
 ```text
 Mota
+├── LICENSE
+├── README.md
 ├── MobileApplication
-└── assets
+│   ├── analysis_options.yaml
+│   ├── pubspec.yaml
+│   ├── README.md
+│   ├── android/
+│   ├── assets/
+│   │   ├── animations/
+│   │   ├── icons/
+│   │   └── images/
+│   ├── ios/
+│   └── lib/
+│       ├── main.dart
+│       └── app/
+│           ├── app.dart
+│           ├── core/
+│           │   ├── BT_HardwareDrive/
+│           │   │   ├── bluetooth_device_info.dart
+│           │   │   └── bluetooth_discovery_service.dart
+│           │   ├── network/
+│           │   └── nfc/
+│           ├── features/
+│           │   ├── bluetooth/
+│           │   │   ├── models/
+│           │   │   └── pages/
+│           │   ├── bot_control/
+│           │   │   ├── models/
+│           │   │   └── pages/
+│           │   ├── guide/
+│           │   │   └── pages/
+│           │   ├── robot_face/
+│           │   │   ├── models/
+│           │   │   ├── pages/
+│           │   │   └── widgets/
+│           │   └── settings/
+│           │       └── pages/
+│           ├── router/
+│           └── shared/
+│               ├── theme/
+│               └── widgets/
+└── assets/
 ```
 
 ## Mobile Application
 
 The mobile client lives in [`MobileApplication`](MobileApplication) and is built with Flutter.
+
+---
+
+## Star History
+
+仓库的 Star 历史图表：
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=IwakuraRin/Mota.DeskAgentBot&type=date&theme=dark&legend=top-left" />
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=IwakuraRin/Mota.DeskAgentBot&type=date&legend=top-left" />
+  <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=IwakuraRin/Mota.DeskAgentBot&type=date&legend=top-left" />
+</picture>
+
+[查看实时图表](https://www.star-history.com/IwakuraRin/Mota.DeskAgentBot)
+

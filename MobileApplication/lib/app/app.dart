@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'core/bluetooth/bluetooth_device_info.dart';
+import 'core/BT_HardwareDrive/bluetooth_device_info.dart';
 import 'features/bluetooth/models/companion_connect_state.dart';
 import 'features/bluetooth/pages/robot_bluetooth_page.dart';
 import 'features/bot_control/models/companion_move_command.dart';

@@ -201,9 +201,6 @@ class CompanionRobotFacePainter extends CustomPainter {
     final h = size.height;
     final color = mood.moodColor;
     final scale = largeMode ? 1.18 : 1.0;
-    final blink = mood == CompanionBotMood.sleepy
-        ? 0.22
-        : _keyframeBlink(tick, closeAt: 0.785);
     final glowPulse = 0.35 + _easeSin(tick) * 0.55;
     final floatOffset = -8 + _easeSin(tick * 2800 / 2200) * 16;
     final eyeOffsetY = switch (mood) {
@@ -253,10 +250,8 @@ class CompanionRobotFacePainter extends CustomPainter {
         y: faceTop + faceHeight * 0.40,
         color: color,
         scale: scale);
-    _drawEye(
-        canvas, Offset(w * 0.36, h * 0.43 + eyeOffsetY), color, blink, scale);
-    _drawEye(
-        canvas, Offset(w * 0.64, h * 0.43 + eyeOffsetY), color, blink, scale);
+    _drawEye(canvas, Offset(w * 0.36, h * 0.43 + eyeOffsetY), scale);
+    _drawEye(canvas, Offset(w * 0.64, h * 0.43 + eyeOffsetY), scale);
     _drawBrows(canvas, w, h, color, scale);
     _drawMouth(canvas, w, h, color, scale);
     _drawCheeks(canvas, w, h, color, scale);
@@ -264,40 +259,8 @@ class CompanionRobotFacePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawEye(
-      Canvas canvas, Offset center, Color color, double blink, double scale) {
-    if (mood == CompanionBotMood.love) {
-      final paint = Paint()..color = color;
-      canvas.drawCircle(Offset(center.dx - 12 * scale, center.dy - 4 * scale),
-          18 * scale, paint);
-      canvas.drawCircle(Offset(center.dx + 12 * scale, center.dy - 4 * scale),
-          18 * scale, paint);
-      canvas.drawCircle(
-          Offset(center.dx, center.dy + 12 * scale), 22 * scale, paint);
-      return;
-    }
-
-    if (mood == CompanionBotMood.sleepy) {
-      _line(canvas, Offset(center.dx - 38 * scale, center.dy),
-          Offset(center.dx + 38 * scale, center.dy), color, 10 * scale);
-      return;
-    }
-
-    _oval(
-        canvas,
-        Rect.fromLTWH(center.dx - 44 * scale, center.dy - 30 * blink * scale,
-            88 * scale, 60 * blink * scale),
-        color.withValues(alpha: 0.22));
-    _oval(
-        canvas,
-        Rect.fromLTWH(center.dx - 35 * scale, center.dy - 23 * blink * scale,
-            70 * scale, 46 * blink * scale),
-        color);
-    canvas.drawCircle(
-      Offset(center.dx - 12 * scale, center.dy - 8 * blink * scale),
-      6 * math.max(blink, 0.3) * scale,
-      Paint()..color = Colors.white.withValues(alpha: 0.55),
-    );
+  void _drawEye(Canvas canvas, Offset center, double scale) {
+    _drawWhiteEye(canvas, center, 28 * scale);
   }
 
   void _drawBrows(
@@ -436,48 +399,16 @@ class RobotHeroPreviewPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final glowColor = switch (mood) {
-      CompanionBotMood.angry => const Color(0xFFFF3B4E),
-      CompanionBotMood.love => const Color(0xFFFF5EA8),
-      CompanionBotMood.surprised => const Color(0xFFFACC15),
-      _ => const Color(0xFF42CFF4),
-    };
-    final blink = mood == CompanionBotMood.sleepy
-        ? 0.34
-        : _keyframeBlink(tick, closeAt: 0.77);
     final breathe = 0.96 + _easeSin(tick) * 0.08;
     final centerX = size.width * 0.5;
     final faceCenterY = size.height * 0.46;
-    final eyeW = size.width * 0.15 * breathe;
-    final eyeH = size.height * 0.34 * math.max(blink, 0.18);
-    final eyeTop = faceCenterY - eyeH / 2;
-    final leftEyeX = centerX - size.width * 0.18 - eyeW / 2;
-    final rightEyeX = centerX + size.width * 0.18 - eyeW / 2;
+    final eyeRadius = size.width * 0.075 * breathe;
 
-    _drawEyeHalo(canvas, Offset(centerX, faceCenterY), size, glowColor);
-    _softEye(
-      canvas,
-      leftEyeX,
-      eyeTop,
-      eyeW,
-      eyeH,
-      glowColor,
-      const Color(0xFFE9FCFF),
-      intense: true,
-    );
-    _softEye(
-      canvas,
-      rightEyeX,
-      eyeTop,
-      eyeW,
-      eyeH,
-      glowColor,
-      const Color(0xFFE9FCFF),
-      intense: true,
-    );
+    _drawWhiteEye(canvas, Offset(centerX - size.width * 0.18, faceCenterY), eyeRadius);
+    _drawWhiteEye(canvas, Offset(centerX + size.width * 0.18, faceCenterY), eyeRadius);
 
     canvas.drawArc(
-      Rect.fromLTWH(centerX - size.width * 0.08, faceCenterY + eyeH * 0.46,
+      Rect.fromLTWH(centerX - size.width * 0.08, faceCenterY + eyeRadius * 0.92,
           size.width * 0.16, size.height * 0.12),
       _deg(20),
       _deg(140),
@@ -494,29 +425,12 @@ class RobotHeroPreviewPainter extends CustomPainter {
       _roundRect(
           canvas,
           Rect.fromLTWH(size.width - 58 + index * 8,
-              faceCenterY - eyeH * 0.45 - barHeight, 5, barHeight),
+              faceCenterY - eyeRadius * 0.9 - barHeight, 5, barHeight),
           3,
           Colors.white.withValues(alpha: 0.72));
     }
   }
 
-  void _drawEyeHalo(Canvas canvas, Offset center, Size size, Color glowColor) {
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: center,
-        width: size.width * 0.58,
-        height: size.height * 0.56,
-      ),
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            glowColor.withValues(alpha: 0.16),
-            glowColor.withValues(alpha: 0.04),
-            Colors.transparent,
-          ],
-        ).createShader(Offset.zero & size),
-    );
-  }
 
   @override
   bool shouldRepaint(covariant RobotHeroPreviewPainter oldDelegate) {
@@ -551,49 +465,13 @@ class ImmersiveRobotDisplayPainter extends CustomPainter {
   }
 
   void _drawImmersiveEyes(Canvas canvas, Size size) {
-    final eyeColor = switch (mood) {
-      CompanionBotMood.angry => const Color(0xFFFFE2E2),
-      CompanionBotMood.love => const Color(0xFFFFE0F0),
-      CompanionBotMood.sleepy => const Color(0xFFE9F0FF),
-      _ => const Color(0xFFE9FCFF),
-    };
-    final glowColor = switch (mood) {
-      CompanionBotMood.angry => const Color(0xFFFF3B4E),
-      CompanionBotMood.love => const Color(0xFFFF5EA8),
-      CompanionBotMood.surprised => const Color(0xFFFACC15),
-      _ => const Color(0xFF1E63FF),
-    };
-    final blink = mood == CompanionBotMood.sleepy
-        ? 0.28
-        : _keyframeBlink(tick, closeAt: 0.755);
     final breathe = 0.88 + _easeSin(tick) * 0.16;
     final floatY = -5 + _easeSin(tick * 3200 / 2200) * 10;
-    final eyeWidth = size.width * 0.15 * breathe;
-    final eyeHeight = size.height * 0.28 * math.max(blink, 0.12);
-    final topY = size.height * 0.28 + floatY;
-    final leftX = size.width * 0.34 - eyeWidth / 2;
-    final rightX = size.width * 0.66 - eyeWidth / 2;
+    final eyeRadius = size.width * 0.075 * breathe;
+    final eyeCenterY = size.height * 0.28 + floatY + eyeRadius;
 
-    _softEye(canvas, leftX, topY, eyeWidth, eyeHeight, glowColor, eyeColor,
-        intense: true);
-    _softEye(canvas, rightX, topY, eyeWidth, eyeHeight, glowColor, eyeColor,
-        intense: true);
-
-    if (mood == CompanionBotMood.angry) {
-      final browY = topY - size.height * 0.08;
-      _line(
-          canvas,
-          Offset(leftX + eyeWidth * 0.08, browY),
-          Offset(leftX + eyeWidth * 0.92, browY + size.height * 0.04),
-          const Color(0xFF65D9FF),
-          9);
-      _line(
-          canvas,
-          Offset(rightX + eyeWidth * 0.92, browY),
-          Offset(rightX + eyeWidth * 0.08, browY + size.height * 0.04),
-          const Color(0xFF65D9FF),
-          9);
-    }
+    _drawWhiteEye(canvas, Offset(size.width * 0.34, eyeCenterY), eyeRadius);
+    _drawWhiteEye(canvas, Offset(size.width * 0.66, eyeCenterY), eyeRadius);
   }
 
   void _drawImmersiveStatus(Canvas canvas, Size size) {
@@ -614,15 +492,6 @@ class ImmersiveRobotDisplayPainter extends CustomPainter {
   }
 }
 
-double _keyframeBlink(double tick, {required double closeAt}) {
-  if (tick > closeAt - 0.03 && tick < closeAt) {
-    return 1 - (tick - (closeAt - 0.03)) / 0.03 * 0.92;
-  }
-  if (tick >= closeAt && tick < closeAt + 0.05) {
-    return 0.08 + (tick - closeAt) / 0.05 * 0.92;
-  }
-  return 1;
-}
 
 double _easeSin(double value) {
   return (math.sin(value * math.pi * 2 - math.pi / 2) + 1) / 2;
@@ -663,29 +532,6 @@ void _line(Canvas canvas, Offset start, Offset end, Color color, double width) {
   );
 }
 
-void _softEye(Canvas canvas, double x, double y, double width, double height,
-    Color glowColor, Color eyeColor,
-    {bool intense = false}) {
-  _roundRect(
-      canvas,
-      Rect.fromLTWH(
-          x - width * 0.16, y + height * 0.22, width * 1.32, height * 0.92),
-      width * 0.64,
-      glowColor.withValues(alpha: intense ? 0.55 : 0.28));
-  _roundRect(canvas, Rect.fromLTWH(x, y, width, height), width * 0.5, eyeColor);
-  _roundRect(
-      canvas,
-      Rect.fromLTWH(
-          x + width * 0.12, y + height * 0.12, width * 0.40, height * 0.22),
-      width * 0.2,
-      Colors.white.withValues(alpha: intense ? 0.18 : 0.55));
-  if (intense) {
-    _roundRectStroke(
-        canvas,
-        Rect.fromLTWH(
-            x - width * 0.12, y + height * 0.44, width * 1.24, height * 0.70),
-        width * 0.62,
-        glowColor.withValues(alpha: 0.16),
-        14);
-  }
+void _drawWhiteEye(Canvas canvas, Offset center, double radius) {
+  canvas.drawCircle(center, radius, Paint()..color = Colors.white);
 }

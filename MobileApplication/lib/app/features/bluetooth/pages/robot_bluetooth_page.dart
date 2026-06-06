@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../../../shared/widgets/page_title.dart';
 import '../../../shared/widgets/soft_cards.dart';
-import '../../../core/bluetooth/bluetooth_device_info.dart';
+import '../../../core/BT_HardwareDrive/bluetooth_device_info.dart';
 import '../models/companion_connect_state.dart';
-import '../../../core/bluetooth/bluetooth_discovery_service.dart';
+import '../../../core/BT_HardwareDrive/bluetooth_discovery_service.dart';
 
 class RobotBluetoothPage extends StatefulWidget {
   const RobotBluetoothPage({
