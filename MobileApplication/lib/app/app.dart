@@ -9,6 +9,7 @@ import 'features/guide/pages/robot_beginner_guide_page.dart';
 import 'features/robot_face/models/companion_bot_mood.dart';
 import 'features/robot_face/pages/immersive_robot_page.dart';
 import 'features/robot_face/pages/robot_home_page.dart';
+import 'features/settings/models/robot_settings.dart';
 import 'features/settings/pages/robot_settings_page.dart';
 import 'router/app_router.dart';
 import 'shared/theme/app_theme.dart';
@@ -39,6 +40,7 @@ class CompanionRobotApp extends StatefulWidget {
 class _CompanionRobotAppState extends State<CompanionRobotApp> {
   CompanionBotMood _mood = CompanionBotMood.neutral;
   CompanionConnectState _connectState = CompanionConnectState.disconnected;
+  RobotSettings _settings = const RobotSettings();
   RobotTab _currentTab = RobotTab.home;
   String _lastCommand = '暂无指令';
   String _aiMessage = '点击 AI 呼唤，可以模拟让机器人来到你身边。';
@@ -106,6 +108,8 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
       RobotTab.guide => const RobotBeginnerGuidePage(),
       RobotTab.settings => RobotSettingsPage(
           connectState: _connectState,
+          settings: _settings,
+          onSettingsChanged: _settingsChanged,
           onScanTap: _openBluetoothScanner,
           onConnectTap: _quickConnect,
           onDisconnectTap: _disconnect,
@@ -118,6 +122,10 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
       _currentTab = RobotTab.bluetooth;
       _bluetoothScanRequest += 1;
     });
+  }
+
+  void _settingsChanged(RobotSettings settings) {
+    setState(() => _settings = settings);
   }
 
   void _scanStarted() {
