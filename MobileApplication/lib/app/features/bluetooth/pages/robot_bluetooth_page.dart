@@ -16,25 +16,25 @@ class RobotBluetoothPage extends StatefulWidget {
     required this.onScanStarted,
     required this.onDeviceConnected,
     required this.onDisconnectTap,
-    this.discoveryService = const BluetoothDiscoveryService(),
+    this.discoveryService = const BtDiscoveryService(),
     super.key,
   });
 
   final CompanionConnectState connectState;
   final int scanRequestId;
   final VoidCallback onScanStarted;
-  final ValueChanged<BluetoothDeviceInfo> onDeviceConnected;
+  final ValueChanged<BtDeviceInfo> onDeviceConnected;
   final VoidCallback onDisconnectTap;
-  final BluetoothDiscoveryService discoveryService;
+  final BtDiscoveryService discoveryService;
 
   @override
   State<RobotBluetoothPage> createState() => _RobotBluetoothPageState();
 }
 
 class _RobotBluetoothPageState extends State<RobotBluetoothPage> {
-  List<BluetoothDeviceInfo> _devices = const [];
+  List<BtDeviceInfo> _devices = const [];
   String _statusMessage = '点击扫描，弹窗查看周围蓝牙设备。';
-  BluetoothDeviceInfo? _selectedDevice;
+  BtDeviceInfo? _selectedDevice;
   bool _showScanDialog = false;
 
   @override
@@ -142,7 +142,7 @@ class BluetoothStatusPanel extends StatelessWidget {
   });
 
   final CompanionConnectState connectState;
-  final BluetoothDeviceInfo? selectedDevice;
+  final BtDeviceInfo? selectedDevice;
   final String statusMessage;
   final VoidCallback onScanTap;
   final VoidCallback onDisconnectTap;
@@ -226,7 +226,7 @@ class SelectedDeviceSummary extends StatelessWidget {
     super.key,
   });
 
-  final BluetoothDeviceInfo device;
+  final BtDeviceInfo device;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +279,7 @@ class BluetoothOverviewGrid extends StatelessWidget {
   });
 
   final int deviceCount;
-  final BluetoothDeviceInfo? selectedDevice;
+  final BtDeviceInfo? selectedDevice;
   final CompanionConnectState connectState;
 
   @override
@@ -367,12 +367,12 @@ class BluetoothScannerDialog extends StatelessWidget {
     super.key,
   });
 
-  final List<BluetoothDeviceInfo> devices;
+  final List<BtDeviceInfo> devices;
   final String statusMessage;
-  final BluetoothDeviceInfo? selectedDevice;
+  final BtDeviceInfo? selectedDevice;
   final VoidCallback onScanAgain;
   final VoidCallback onDismiss;
-  final ValueChanged<BluetoothDeviceInfo> onDeviceTap;
+  final ValueChanged<BtDeviceInfo> onDeviceTap;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +494,7 @@ class BluetoothDeviceRow extends StatelessWidget {
     super.key,
   });
 
-  final BluetoothDeviceInfo device;
+  final BtDeviceInfo device;
   final bool selected;
   final VoidCallback onTap;
 

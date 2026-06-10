@@ -148,7 +148,7 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
     });
   }
 
-  void _deviceConnected(BluetoothDeviceInfo device) {
+  void _deviceConnected(BtDeviceInfo device) {
     setState(() {
       _connectState = CompanionConnectState.connected;
       _mood = CompanionBotMood.happy;

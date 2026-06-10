@@ -1,37 +1,53 @@
 // 文件作用：封装蓝牙扫描服务边界；
-
 import 'bluetooth_device_info.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-class BluetoothDiscoveryService {
-  const BluetoothDiscoveryService();
+class BtDiscoveryService
+{
+  const BtDiscoveryService();
 
-  Future<BluetoothDiscoveryResult> scanNearbyDevices() async {
-    await Future<void>.delayed(const Duration(milliseconds: 260));
+  Future<BtResult> scanNearbyDevices() async
+  {
+    final devices = <BtDeviceInfo>[];
+    final subscription = FlutterBluePlus.onScanResults.listen((results)
+      {
+      for (final result in results)
+      {
+        final device = result.device;
+        final name = device.platformName;
+        if (name.isEmpty)
+        {
+          continue;
+        }
 
-    const devices = [
-      BluetoothDeviceInfo(
-        name: 'LinBot-01',
-        address: 'A4:C1:38:21:8B:01',
-        signal: '-48 dBm',
-        paired: true,
-      ),
-      BluetoothDeviceInfo(
-        name: 'Robot-01',
-        address: 'F0:12:9A:BC:03:7E',
-        signal: '-61 dBm',
-        paired: false,
-      ),
-      BluetoothDeviceInfo(
-        name: 'DemoBot',
-        address: '20:24:06:03:19:42',
-        signal: '-72 dBm',
-        paired: false,
-      ),
-    ];
+        devices.add
+        (
+          BtDeviceInfo
+          (
+            name:name,
+            address:device.remoteId.str,
+            signal: '${result.rssi} dBm',
+            paired:false,
+          ),
+        );
+      }
+    }
+   );
 
-    return const BluetoothDiscoveryResult(
+    await FlutterBluePlus.startScan
+    (
+      timeout:const Duration(seconds:5),
+    );
+
+    await Future<void>.delayed(const Duration(seconds: 5));
+
+    await FlutterBluePlus.stopScan();
+    await subscription.cancel();
+
+    return BtResult
+    (
       devices: devices,
-      message: '扫描完成，共发现 3 个设备。',
+      message: '扫描完成，一共发现了${devices.length} 只可爱的小Mota',
     );
   }
 }
