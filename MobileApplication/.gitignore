@@ -7,6 +7,21 @@
 build/
 coverage/
 
+# Native build and packaging outputs
+*.apk
+*.aab
+*.apks
+*.ipa
+*.xcarchive
+*.dSYM/
+android/.gradle/
+android/.cxx/
+android/app/debug/
+android/app/profile/
+android/app/release/
+ios/Pods/
+ios/.symlinks/
+
 .DS_Store
 .idea/
 .vscode/
