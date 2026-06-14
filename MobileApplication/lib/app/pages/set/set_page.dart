@@ -118,26 +118,35 @@ class RobotSettingsPage extends StatelessWidget {
     );
   }
 
-  void _showProfileEditor(BuildContext context) {
-    showModalBottomSheet<void>(
+  Future<void> _showProfileEditor(BuildContext context) async {
+    final updatedProfile = await showModalBottomSheet<MenuProfileState>(
       context: context,
-      showDragHandle: true,
+      showDragHandle: false,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          22,
-          4,
-          22,
-          MediaQuery.viewInsetsOf(context).bottom + 28,
+      builder: (context) => AnimatedPadding(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
-        child: _ProfileEditSheet(
-          profile: profile,
-          onProfileChanged: onProfileChanged,
-        ),
+        child: _ProfileEditSheet(profile: profile),
+      ),
+    );
+
+    if (updatedProfile == null || !context.mounted) {
+      return;
+    }
+
+    onProfileChanged(updatedProfile);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('个人主页已更新'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -202,34 +211,86 @@ class _ProfileHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.ink,
-      borderRadius: BorderRadius.circular(34),
-      elevation: 12,
-      shadowColor: AppColors.ink.withValues(alpha: 0.18),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(38),
       child: Container(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(34),
+          borderRadius: BorderRadius.circular(38),
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF202B3A), Color(0xFF111827)],
+            colors: [Color(0xFF243247), Color(0xFF111A2A)],
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.ink.withValues(alpha: 0.18),
+              blurRadius: 30,
+              offset: const Offset(0, 16),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            _EditableAvatar(profile: profile, size: 78, onTap: onAvatarTap),
+            _EditableAvatar(profile: profile, size: 62, onTap: onAvatarTap),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                profile.nickname,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    profile.nickname,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    profile.bio.isEmpty ? '我的机器人伙伴' : profile.bio,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.64),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.edit_rounded,
+                          size: 14,
+                          color: AppColors.lime.withValues(alpha: 0.95),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '点击编辑头像与昵称',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -262,20 +323,44 @@ class _EditableAvatar extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            AvatarPreview(
-              avatarEmoji: profile.avatarEmoji,
-              avatarImageBytes: profile.avatarImageBytes,
-              size: size,
+            Container(
+              width: size + 18,
+              height: size + 18,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.98),
+                    AppColors.aquaSoft,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.aqua.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: AvatarPreview(
+                avatarEmoji: profile.avatarEmoji,
+                avatarImageBytes: profile.avatarImageBytes,
+                size: size,
+              ),
             ),
             Positioned(
-              right: 0,
-              bottom: 0,
+              right: 2,
+              bottom: 2,
               child: Container(
-                width: 25,
-                height: 25,
-                decoration: const BoxDecoration(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
                   color: AppColors.lime,
                   shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: const Icon(
                   Icons.add_rounded,
@@ -294,11 +379,9 @@ class _EditableAvatar extends StatelessWidget {
 class _ProfileEditSheet extends StatefulWidget {
   const _ProfileEditSheet({
     required this.profile,
-    required this.onProfileChanged,
   });
 
   final MenuProfileState profile;
-  final ValueChanged<MenuProfileState> onProfileChanged;
 
   @override
   State<_ProfileEditSheet> createState() => _ProfileEditSheetState();
@@ -314,19 +397,42 @@ class _ProfileEditSheetState extends State<_ProfileEditSheet> {
     '🧠',
   ];
 
+  static const List<String> _preferenceChoices = [
+    '安静陪伴',
+    '活泼互动',
+    '学习助手',
+    '情绪陪伴',
+    '桌面机器人',
+  ];
+
+  static const List<String> _extraAvatarChoices = [
+    '🐱',
+    '🐶',
+    '🎮',
+    '💡',
+  ];
+
   late MenuProfileState _profile;
   late final TextEditingController _nicknameController;
+  late final TextEditingController _bioController;
+
+  List<String> get _allAvatarChoices => [
+        ..._avatarChoices,
+        ..._extraAvatarChoices,
+      ];
 
   @override
   void initState() {
     super.initState();
     _profile = widget.profile;
     _nicknameController = TextEditingController(text: _profile.nickname);
+    _bioController = TextEditingController(text: _profile.bio);
   }
 
   @override
   void dispose() {
     _nicknameController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -353,87 +459,462 @@ class _ProfileEditSheetState extends State<_ProfileEditSheet> {
 
   void _changeProfile(MenuProfileState profile) {
     setState(() => _profile = profile);
-    widget.onProfileChanged(profile);
+  }
+
+  void _togglePreference(String tag) {
+    final tags = [..._profile.preferenceTags];
+    if (tags.contains(tag)) {
+      tags.remove(tag);
+    } else {
+      tags.add(tag);
+    }
+
+    _changeProfile(_profile.copyWith(preferenceTags: tags));
+  }
+
+  void _saveProfile() {
+    final nickname = _nicknameController.text.trim();
+    if (nickname.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('昵称不能为空'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final bio = _bioController.text.trim();
+    Navigator.of(context).pop(
+      _profile.copyWith(
+        nickname: nickname,
+        bio: bio.isEmpty ? '我的机器人伙伴' : bio,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '编辑个人主页',
-          style: TextStyle(
-            color: AppColors.ink,
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 18),
-        Row(
+    final nicknameLength = _nicknameController.text.characters.length;
+    final bioLength = _bioController.text.characters.length;
+    final canSave = _nicknameController.text.trim().isNotEmpty;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.88,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AvatarPreview(
-              avatarEmoji: _profile.avatarEmoji,
-              avatarImageBytes: _profile.avatarImageBytes,
-              size: 72,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                _profile.nickname,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+            Center(
+              child: Container(
+                width: 46,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.muted.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _AvatarChoiceButton(
-              selected: _profile.avatarImageBytes != null,
-              onTap: _pickAvatarFromGallery,
-              child: const Icon(
-                Icons.add_rounded,
+            const SizedBox(height: 18),
+            const Text(
+              '编辑个人主页',
+              style: TextStyle(
                 color: AppColors.ink,
-                size: 30,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
               ),
             ),
-            ..._avatarChoices.map(
-              (emoji) => _AvatarChoiceButton(
-                selected: _profile.avatarImageBytes == null &&
-                    _profile.avatarEmoji == emoji,
-                onTap: () => _selectEmojiAvatar(emoji),
-                child: Text(emoji, style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 6),
+            const Text(
+              '自定义你的机器人伙伴资料',
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
               ),
+            ),
+            const SizedBox(height: 18),
+            _ProfileEditSummary(profile: _profile),
+            const SizedBox(height: 20),
+            _SectionLabel(
+              title: '头像',
+              trailing: _profile.avatarImageBytes == null ? '默认头像' : '来自相册',
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 76,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _AvatarChoiceButton(
+                      selected: _profile.avatarImageBytes != null,
+                      onTap: _pickAvatarFromGallery,
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: AppColors.ink,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                  ..._allAvatarChoices.map(
+                    (emoji) => Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: _AvatarChoiceButton(
+                        selected: _profile.avatarImageBytes == null &&
+                            _profile.avatarEmoji == emoji,
+                        onTap: () => _selectEmojiAvatar(emoji),
+                        child:
+                            Text(emoji, style: const TextStyle(fontSize: 25)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            _ModernTextField(
+              controller: _nicknameController,
+              label: '昵称',
+              hint: 'Lin Robot 用户',
+              maxLength: 16,
+              currentLength: nicknameLength,
+              onChanged: (value) {
+                _changeProfile(_profile.copyWith(nickname: value));
+              },
+            ),
+            const SizedBox(height: 14),
+            _ModernTextField(
+              controller: _bioController,
+              label: '个性签名 / Bio',
+              hint: '我的机器人伙伴',
+              maxLength: 30,
+              currentLength: bioLength,
+              onChanged: (value) {
+                _changeProfile(_profile.copyWith(bio: value));
+              },
+            ),
+            const SizedBox(height: 18),
+            const _SectionLabel(title: '机器人偏好'),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 10,
+              children: _preferenceChoices.map((tag) {
+                final selected = _profile.preferenceTags.contains(tag);
+                return _PreferenceChip(
+                  label: tag,
+                  selected: selected,
+                  onTap: () => _togglePreference(tag),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      side: BorderSide(
+                        color: AppColors.muted.withValues(alpha: 0.25),
+                      ),
+                      foregroundColor: AppColors.ink,
+                    ),
+                    child: const Text('取消'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: canSave ? _saveProfile : null,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      backgroundColor: AppColors.lime,
+                      disabledBackgroundColor:
+                          AppColors.muted.withValues(alpha: 0.18),
+                      foregroundColor: AppColors.ink,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      '保存更改',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        const SizedBox(height: 18),
-        TextField(
-          controller: _nicknameController,
-          onChanged: (value) {
-            _changeProfile(_profile.copyWith(nickname: value));
-          },
-          decoration: InputDecoration(
-            labelText: '昵称',
-            filled: true,
-            fillColor: AppColors.cardSoft,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide.none,
+      ),
+    );
+  }
+}
+
+class _ProfileEditSummary extends StatelessWidget {
+  const _ProfileEditSummary({required this.profile});
+
+  final MenuProfileState profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.07),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: Container(
+              key: ValueKey<Object?>(
+                profile.avatarImageBytes ?? profile.avatarEmoji,
+              ),
+              width: 76,
+              height: 76,
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.lime.withValues(alpha: 0.48),
+                    AppColors.aquaSoft,
+                  ],
+                ),
+              ),
+              child: AvatarPreview(
+                avatarEmoji: profile.avatarEmoji,
+                avatarImageBytes: profile.avatarImageBytes,
+                size: 62,
+              ),
             ),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  profile.nickname,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  profile.bio.isEmpty ? '我的机器人伙伴' : profile.bio,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({
+    required this.title,
+    this.trailing,
+  });
+
+  final String title;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontSize: 15,
+            fontWeight: FontWeight.w900,
+          ),
         ),
+        const Spacer(),
+        if (trailing != null)
+          Text(
+            trailing!,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _ModernTextField extends StatelessWidget {
+  const _ModernTextField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.maxLength,
+    required this.currentLength,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final int maxLength;
+  final int currentLength;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLength: maxLength,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        counterText: '$currentLength/$maxLength',
+        filled: true,
+        fillColor: Colors.white,
+        suffixIcon: controller.text.isEmpty
+            ? null
+            : IconButton(
+                tooltip: '清空',
+                onPressed: () {
+                  controller.clear();
+                  onChanged('');
+                },
+                icon: const Icon(Icons.close_rounded),
+              ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: BorderSide(
+            color: AppColors.muted.withValues(alpha: 0.12),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: AppColors.lime, width: 2),
+        ),
+      ),
+    );
+  }
+}
+
+class _PreferenceChip extends StatelessWidget {
+  const _PreferenceChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: selected ? AppColors.lime : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: selected
+              ? AppColors.lime
+              : AppColors.muted.withValues(alpha: 0.16),
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: AppColors.lime.withValues(alpha: 0.22),
+                  blurRadius: 14,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedScale(
+                scale: selected ? 1 : 0.75,
+                duration: const Duration(milliseconds: 160),
+                child: Icon(
+                  selected ? Icons.check_rounded : Icons.add_rounded,
+                  size: 16,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -457,6 +938,11 @@ class _AvatarChoiceButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected ? AppColors.lime : AppColors.cardSoft,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color:
+              selected ? AppColors.ink.withValues(alpha: 0.14) : Colors.white,
+          width: selected ? 2 : 1,
+        ),
         boxShadow: selected
             ? [
                 BoxShadow(
@@ -470,7 +956,33 @@ class _AvatarChoiceButton extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(width: 58, height: 58, child: Center(child: child)),
+        child: SizedBox(
+          width: 58,
+          height: 58,
+          child: Stack(
+            children: [
+              Center(child: child),
+              if (selected)
+                Positioned(
+                  right: 5,
+                  bottom: 5,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: AppColors.ink,
+                      size: 14,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -43,20 +43,48 @@ class SettingsHeader extends StatelessWidget {
           ),
         ),
         Material(
-          color: Colors.white,
+          color: Colors.transparent,
           shape: const CircleBorder(),
-          elevation: 8,
-          shadowColor: Colors.black.withValues(alpha: 0.08),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onAvatarTap,
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: AvatarPreview(
-                avatarEmoji: profile.avatarEmoji,
-                avatarImageBytes: profile.avatarImageBytes,
-                size: 54,
+            child: Container(
+              width: 56,
+              height: 56,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.aqua.withValues(alpha: 0.16),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: AppColors.ink.withValues(alpha: 0.08),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.aquaSoft,
+                ),
+                child: Center(
+                  child: AvatarPreview(
+                    avatarEmoji: profile.avatarEmoji,
+                    avatarImageBytes: profile.avatarImageBytes,
+                    size: 40,
+                  ),
+                ),
               ),
             ),
           ),

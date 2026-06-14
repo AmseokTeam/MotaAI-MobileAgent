@@ -42,6 +42,8 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
   static const String _nicknameKey = 'menu_profile_nickname';
   static const String _avatarEmojiKey = 'menu_profile_avatar_emoji';
   static const String _avatarImageKey = 'menu_profile_avatar_image';
+  static const String _profileBioKey = 'menu_profile_bio';
+  static const String _profileTagsKey = 'menu_profile_tags';
 
   CompanionBotMood _mood = CompanionBotMood.neutral;
   CompanionConnectState _connectState = CompanionConnectState.disconnected;
@@ -121,6 +123,9 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
       _profile = MenuProfileState(
         nickname: prefs.getString(_nicknameKey) ?? _profile.nickname,
         avatarEmoji: prefs.getString(_avatarEmojiKey) ?? _profile.avatarEmoji,
+        bio: prefs.getString(_profileBioKey) ?? _profile.bio,
+        preferenceTags:
+            prefs.getStringList(_profileTagsKey) ?? _profile.preferenceTags,
         avatarImageBytes: image == null ? null : base64Decode(image),
       );
     });
@@ -132,6 +137,8 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_nicknameKey, profile.nickname);
     await prefs.setString(_avatarEmojiKey, profile.avatarEmoji);
+    await prefs.setString(_profileBioKey, profile.bio);
+    await prefs.setStringList(_profileTagsKey, profile.preferenceTags);
 
     final imageBytes = profile.avatarImageBytes;
     if (imageBytes == null) {
