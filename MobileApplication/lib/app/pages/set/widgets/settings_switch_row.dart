@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:milo_ai/app/features/settings/widgets/settings_row.dart';
+import 'package:milo_ai/app/pages/set/widgets/settings_row.dart';
 import 'package:milo_ai/app/shared/theme/app_colors.dart';
 
 class SettingsSwitchRow extends StatelessWidget {
