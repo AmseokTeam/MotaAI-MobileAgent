@@ -1,8 +1,8 @@
 // 文件作用：设置页顶部的机器人连接状态卡片。
 
 import 'package:flutter/material.dart';
-import 'package:milo_ai/app/features/bluetooth/models/companion_connect_state.dart';
-import 'package:milo_ai/app/features/settings/models/robot_settings_content.dart';
+import 'package:milo_ai/app/shared/models/companion_connect_state.dart';
+import 'package:milo_ai/app/pages/set/models/robot_settings_content.dart';
 import 'package:milo_ai/app/shared/theme/app_colors.dart';
 
 class ConnectionHero extends StatelessWidget {

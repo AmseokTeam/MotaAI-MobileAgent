@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../models/companion_bot_mood.dart';
-import '../widgets/robot_face_canvas.dart';
+import 'models/companion_bot_mood.dart';
+import 'widgets/robot_face_canvas.dart';
 
 class ImmersiveRobotPage extends StatefulWidget {
   const ImmersiveRobotPage({

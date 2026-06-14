@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'features/bluetooth/models/companion_connect_state.dart';
-import 'features/robot_face/models/companion_bot_mood.dart';
-import 'features/robot_face/pages/immersive_robot_page.dart';
-import 'features/robot_face/pages/robot_home_page.dart';
-import 'features/settings/models/robot_settings.dart';
-import 'features/settings/pages/robot_settings_page.dart';
+import 'shared/models/companion_connect_state.dart';
+import 'pages/home/models/companion_bot_mood.dart';
+import 'pages/home/immersive_robot_page.dart';
+import 'pages/home/home_page.dart';
+import 'pages/set/models/robot_settings.dart';
+import 'pages/set/set_page.dart';
 import 'router/app_router.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/floating_bottom_bar.dart';
@@ -52,7 +52,7 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
   );
   RobotTab _currentTab = RobotTab.home;
   String _lastCommand = '暂无指令';
-  String _aiMessage = '点击 AI 呼唤，可以模拟让机器人来到你身边。';
+  String _aiMessage = '当前等待机器人状态更新。';
   bool _showFullScreenFace = false;
 
   @override
@@ -97,7 +97,6 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
           aiMessage: _aiMessage,
           onMoodChange: (mood) => setState(() => _mood = mood),
           onFullScreenTap: () => setState(() => _showFullScreenFace = true),
-          onAiCallTap: _aiCall,
           onConnectTap: _quickConnect,
         ),
       RobotTab.settings => RobotSettingsPage(
@@ -153,16 +152,6 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
       _mood = CompanionBotMood.happy;
       _lastCommand = '已连接 LinBot-01';
       _aiMessage = '连接成功，当前是前端模拟连接。';
-    });
-  }
-
-  void _aiCall() {
-    setState(() {
-      _mood = CompanionBotMood.love;
-      _lastCommand = 'AI 呼唤：到我旁边';
-      _aiMessage = _connectState == CompanionConnectState.connected
-          ? '收到呼唤：机器人正在向你靠近。'
-          : '已模拟呼唤，但当前还没有连接机器人。';
     });
   }
 }
