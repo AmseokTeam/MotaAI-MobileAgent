@@ -100,90 +100,6 @@ class _RobotHeroPreviewState extends State<RobotHeroPreview>
   }
 }
 
-class ImmersiveRobotDisplay extends StatefulWidget {
-  const ImmersiveRobotDisplay({
-    required this.mood,
-    super.key,
-  });
-
-  final CompanionBotMood mood;
-
-  @override
-  State<ImmersiveRobotDisplay> createState() => _ImmersiveRobotDisplayState();
-}
-
-class _ImmersiveRobotDisplayState extends State<ImmersiveRobotDisplay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _loop;
-
-  @override
-  void initState() {
-    super.initState();
-    _loop = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3200))
-      ..repeat();
-  }
-
-  @override
-  void dispose() {
-    _loop.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: AnimatedBuilder(
-            animation: _loop,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: ImmersiveRobotDisplayPainter(
-                    mood: widget.mood, tick: _loop.value),
-              );
-            },
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 46,
-          child: Text(
-            immersiveCaption(widget.mood),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 20,
-          child: Text(
-            '轻点屏幕返回',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.42),
-                fontSize: 11,
-                fontWeight: FontWeight.w700),
-          ),
-        ),
-        Positioned(
-          top: 24,
-          right: 28,
-          child: Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(
-                color: widget.mood.moodColor, shape: BoxShape.circle),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class CompanionRobotFacePainter extends CustomPainter {
   const CompanionRobotFacePainter({
     required this.mood,
@@ -404,23 +320,11 @@ class RobotHeroPreviewPainter extends CustomPainter {
     final faceCenterY = size.height * 0.46;
     final eyeRadius = size.width * 0.075 * breathe;
 
-    _drawWhiteEye(
-        canvas, Offset(centerX - size.width * 0.18, faceCenterY), eyeRadius);
-    _drawWhiteEye(
-        canvas, Offset(centerX + size.width * 0.18, faceCenterY), eyeRadius);
-
-    canvas.drawArc(
-      Rect.fromLTWH(centerX - size.width * 0.08, faceCenterY + eyeRadius * 0.92,
-          size.width * 0.16, size.height * 0.12),
-      _deg(20),
-      _deg(140),
-      false,
-      Paint()
-        ..color = AppColors.robotEye
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4
-        ..strokeCap = StrokeCap.round,
-    );
+    final blink = _blinkAmount(tick);
+    _drawBlinkingEye(canvas, Offset(centerX - size.width * 0.18, faceCenterY),
+        eyeRadius, blink);
+    _drawBlinkingEye(canvas, Offset(centerX + size.width * 0.18, faceCenterY),
+        eyeRadius, blink);
 
     for (var index = 0; index < 4; index++) {
       final barHeight = 7.0 + index * 4.5;
@@ -439,66 +343,32 @@ class RobotHeroPreviewPainter extends CustomPainter {
   }
 }
 
-class ImmersiveRobotDisplayPainter extends CustomPainter {
-  const ImmersiveRobotDisplayPainter({required this.mood, required this.tick});
-
-  final CompanionBotMood mood;
-  final double tick;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    _drawImmersiveBackground(canvas, size);
-    _drawImmersiveEyes(canvas, size);
-    _drawImmersiveStatus(canvas, size);
-  }
-
-  void _drawImmersiveBackground(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF020204), Color(0xFF06070A), Colors.black],
-        ).createShader(rect),
-    );
-  }
-
-  void _drawImmersiveEyes(Canvas canvas, Size size) {
-    final breathe = 0.88 + _easeSin(tick) * 0.16;
-    final floatY = -5 + _easeSin(tick * 3200 / 2200) * 10;
-    final eyeRadius = size.width * 0.075 * breathe;
-    final eyeCenterY = size.height * 0.28 + floatY + eyeRadius;
-
-    _drawWhiteEye(canvas, Offset(size.width * 0.34, eyeCenterY), eyeRadius);
-    _drawWhiteEye(canvas, Offset(size.width * 0.66, eyeCenterY), eyeRadius);
-  }
-
-  void _drawImmersiveStatus(Canvas canvas, Size size) {
-    final startX = size.width - 92;
-    const topY = 32.0;
-    for (var index = 0; index < 5; index++) {
-      final h = 10.0 + index * 6;
-      _roundRect(canvas, Rect.fromLTWH(startX + index * 9, topY + 34 - h, 5, h),
-          3, Colors.white.withValues(alpha: 0.78));
-    }
-    canvas.drawCircle(Offset(34, size.height * 0.5), 3,
-        Paint()..color = Colors.white.withValues(alpha: 0.72));
-  }
-
-  @override
-  bool shouldRepaint(covariant ImmersiveRobotDisplayPainter oldDelegate) {
-    return oldDelegate.mood != mood || oldDelegate.tick != tick;
-  }
-}
-
 double _easeSin(double value) {
   return (math.sin(value * math.pi * 2 - math.pi / 2) + 1) / 2;
 }
 
 double _deg(double degrees) {
   return degrees * math.pi / 180;
+}
+
+double _blinkAmount(double tick) {
+  const blinkDuration = 0.12;
+  final phase = (tick + 0.08) % 1.0;
+  if (phase > blinkDuration) {
+    return 0;
+  }
+  return math.sin((phase / blinkDuration) * math.pi);
+}
+
+void _drawBlinkingEye(
+    Canvas canvas, Offset center, double radius, double blinkAmount) {
+  final heightScale = 1 - blinkAmount * 0.9;
+  final eyeRect = Rect.fromCenter(
+    center: center,
+    width: radius * 2,
+    height: math.max(radius * 0.16, radius * 2 * heightScale),
+  );
+  _oval(canvas, eyeRect, Colors.white);
 }
 
 void _roundRect(Canvas canvas, Rect rect, double radius, Color color) {

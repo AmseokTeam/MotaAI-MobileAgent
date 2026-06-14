@@ -47,7 +47,6 @@ class RobotHomePage extends StatelessWidget {
               const SizedBox(height: 16),
               RobotHeroCard(
                 mood: mood,
-                connectState: connectState,
                 onTap: onFullScreenTap,
               ),
               const SizedBox(height: 16),

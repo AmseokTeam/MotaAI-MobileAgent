@@ -19,7 +19,7 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
         Text(
-          'Lin Robot',
+          'Mota AI',
           style: TextStyle(
             color: AppColors.ink,
             fontSize: 30,

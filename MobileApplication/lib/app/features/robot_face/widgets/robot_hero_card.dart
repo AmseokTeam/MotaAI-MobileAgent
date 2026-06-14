@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../features/bluetooth/models/companion_connect_state.dart';
 import '../../../shared/theme/app_colors.dart';
 import '../models/companion_bot_mood.dart';
 import 'robot_face_canvas.dart';
@@ -8,13 +7,11 @@ import 'robot_face_canvas.dart';
 class RobotHeroCard extends StatelessWidget {
   const RobotHeroCard({
     required this.mood,
-    required this.connectState,
     required this.onTap,
     super.key,
   });
 
   final CompanionBotMood mood;
-  final CompanionConnectState connectState;
   final VoidCallback onTap;
 
   @override
@@ -62,10 +59,6 @@ class RobotHeroCard extends StatelessWidget {
                           title: 'Mood',
                           value: '${mood.emoji} ${mood.title}',
                         ),
-                        _MiniInfoBlock(
-                          title: 'Connect',
-                          value: statusText(connectState),
-                        ),
                       ],
                     ),
                   ),
@@ -103,7 +96,7 @@ class _HeroTitle extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '机器人屏幕',
+                '和Mota语音对话',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
