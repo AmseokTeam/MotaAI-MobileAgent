@@ -2,59 +2,123 @@ import 'package:flutter/material.dart';
 
 import '../../shared/theme/app_colors.dart';
 import 'models/companion_bot_mood.dart';
-import 'widgets/home_header.dart';
-import 'widgets/robot_hero_card.dart';
+import 'widgets/robot_face_canvas.dart';
 
 class RobotHomePage extends StatelessWidget {
   const RobotHomePage({
     required this.mood,
-    required this.onFullScreenTap,
     super.key,
   });
 
   final CompanionBotMood mood;
-  final VoidCallback onFullScreenTap;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 144),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 540),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const HomeHeader(),
-              const SizedBox(height: 16),
-              RobotHeroCard(
-                mood: mood,
-                onTap: onFullScreenTap,
-              ),
-              const SizedBox(height: 14),
-              const Row(
-                children: [
-                  Expanded(
-                    flex: 7,
-                    child: _HomeShortcutCard(
-                      icon: Icons.chat_bubble_rounded,
-                      title: '与Mota文本对话',
-                      backgroundColor: AppColors.aquaSoft,
-                    ),
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          return const _PortraitOnlyView();
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final topGap =
+                (constraints.maxHeight * 0.08).clamp(28.0, 76.0).toDouble();
+            final faceHeight =
+                (constraints.maxHeight * 0.30).clamp(170.0, 260.0).toDouble();
+
+            return ColoredBox(
+              color: AppColors.heroDeepBlack,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 124),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - 124,
                   ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    flex: 3,
-                    child: _HomeShortcutCard(
-                      icon: Icons.devices_rounded,
-                      title: '查看已连接设备',
-                      compact: true,
-                      backgroundColor: AppColors.coralSoft,
-                    ),
+                  child: Column(
+                    children: [
+                      SizedBox(height: topGap),
+                      SizedBox(
+                        height: faceHeight,
+                        child: FractionallySizedBox(
+                          widthFactor: 0.78,
+                          child: RobotHeroPreview(mood: mood),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        '你想和Mota聊些什么？',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      const _MotaChatInput(),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _MotaChatInput extends StatelessWidget {
+  const _MotaChatInput();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(26),
+      elevation: 10,
+      shadowColor: Colors.black.withValues(alpha: 0.24),
+      child: TextField(
+        minLines: 1,
+        maxLines: 4,
+        textInputAction: TextInputAction.send,
+        style: const TextStyle(
+          color: AppColors.ink,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+        decoration: InputDecoration(
+          hintText: '输入你想说的话',
+          hintStyle: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          prefixIcon: const Icon(
+            Icons.chat_bubble_rounded,
+            color: AppColors.orange,
+            size: 21,
+          ),
+          suffixIcon: Container(
+            width: 38,
+            height: 38,
+            margin: const EdgeInsets.all(7),
+            decoration: const BoxDecoration(
+              color: AppColors.ink,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.arrow_upward_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 17,
           ),
         ),
       ),
@@ -62,53 +126,24 @@ class RobotHomePage extends StatelessWidget {
   }
 }
 
-class _HomeShortcutCard extends StatelessWidget {
-  const _HomeShortcutCard({
-    required this.icon,
-    required this.title,
-    required this.backgroundColor,
-    this.compact = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final Color backgroundColor;
-  final bool compact;
+class _PortraitOnlyView extends StatelessWidget {
+  const _PortraitOnlyView();
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(24),
-      elevation: 5,
-      shadowColor: Colors.black.withValues(alpha: 0.09),
-      child: SizedBox(
-        height: 86,
+    return const ColoredBox(
+      color: AppColors.heroDeepBlack,
+      child: Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 16,
-            vertical: 14,
-          ),
-          child: Column(
-            crossAxisAlignment:
-                compact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: AppColors.ink, size: compact ? 20 : 24),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                maxLines: compact ? 2 : 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: compact ? TextAlign.center : TextAlign.start,
-                style: TextStyle(
-                  color: AppColors.ink,
-                  fontSize: compact ? 12 : 15,
-                  fontWeight: FontWeight.w800,
-                  height: 1.15,
-                ),
-              ),
-            ],
+          padding: EdgeInsets.all(28),
+          child: Text(
+            '该功能仅支持竖屏使用',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),

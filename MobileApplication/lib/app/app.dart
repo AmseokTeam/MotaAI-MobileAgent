@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shared/models/companion_connect_state.dart';
 import 'pages/home/models/companion_bot_mood.dart';
-import 'pages/home/immersive_robot_page.dart';
 import 'pages/home/home_page.dart';
+import 'pages/plugin_community/plugin_community_page.dart';
 import 'pages/set/models/robot_settings.dart';
 import 'pages/set/set_page.dart';
 import 'router/app_router.dart';
@@ -53,8 +53,7 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
     nickname: 'Lin Robot 用户',
     avatarEmoji: '🤖',
   );
-  RobotTab _currentTab = RobotTab.home;
-  bool _showFullScreenFace = false;
+  RobotTab _currentTab = RobotTab.chat;
 
   @override
   void initState() {
@@ -64,13 +63,6 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (_showFullScreenFace) {
-      return ImmersiveRobotPage(
-        mood: _mood,
-        onExit: () => setState(() => _showFullScreenFace = false),
-      );
-    }
-
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -91,10 +83,10 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
 
   Widget _buildCurrentPage() {
     return switch (_currentTab) {
-      RobotTab.home => RobotHomePage(
+      RobotTab.chat => RobotHomePage(
           mood: _mood,
-          onFullScreenTap: () => setState(() => _showFullScreenFace = true),
         ),
+      RobotTab.pluginCommunity => const PluginCommunityPage(),
       RobotTab.settings => RobotSettingsPage(
           connectState: _connectState,
           settings: _settings,
