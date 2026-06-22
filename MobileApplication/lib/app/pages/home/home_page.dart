@@ -23,9 +23,9 @@ class RobotHomePage extends StatelessWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             final topGap =
-                (constraints.maxHeight * 0.08).clamp(28.0, 76.0).toDouble();
+                (constraints.maxHeight * 0.18).clamp(96.0, 148.0).toDouble();
             final faceHeight =
-                (constraints.maxHeight * 0.30).clamp(170.0, 260.0).toDouble();
+                (constraints.maxHeight * 0.22).clamp(160.0, 210.0).toDouble();
 
             return ColoredBox(
               color: AppColors.heroDeepBlack,
@@ -37,11 +37,11 @@ class RobotHomePage extends StatelessWidget {
                     SizedBox(
                       height: faceHeight,
                       child: FractionallySizedBox(
-                        widthFactor: 0.78,
+                        widthFactor: 0.96,
                         child: RobotHeroPreview(mood: mood),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 10),
                     const Text(
                       '你想和Mota聊些什么？',
                       textAlign: TextAlign.center,

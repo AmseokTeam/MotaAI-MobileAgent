@@ -60,13 +60,13 @@ class RobotHeroPreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final breathe = 0.96 + _easeSin(tick) * 0.08;
     final centerX = size.width * 0.5;
-    final faceCenterY = size.height * 0.46;
-    final eyeRadius = size.width * 0.075 * breathe;
+    final faceCenterY = size.height * 0.58;
+    final eyeRadius = size.width * 0.105 * breathe;
 
     final blink = _blinkAmount(tick);
-    _drawBlinkingEye(canvas, Offset(centerX - size.width * 0.18, faceCenterY),
+    _drawBlinkingEye(canvas, Offset(centerX - size.width * 0.22, faceCenterY),
         eyeRadius, blink);
-    _drawBlinkingEye(canvas, Offset(centerX + size.width * 0.18, faceCenterY),
+    _drawBlinkingEye(canvas, Offset(centerX + size.width * 0.22, faceCenterY),
         eyeRadius, blink);
   }
 
