@@ -21,5 +21,5 @@ class AppColors {
   static const Color robotEye = Color(0xFF5AD7FF);
   static const Color cardSoft = Color(0xFFF7F9FC);
   static const Color chatWarmBackground = Color(0xFFF7F1E8);
-  static const Color robotEyeSoftDark = Color(0xFF202124);
+  static const Color robotEyeSky = Color(0xFF6ECFF6);
 }
