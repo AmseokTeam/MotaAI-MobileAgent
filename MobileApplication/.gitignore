@@ -38,3 +38,8 @@ ios/Flutter/flutter_export_environment.sh
 *.key
 
 pubspec.lock
+
+# Local ASR model payloads. Keep large downloaded model files out of Git.
+assets/asr_models/**
+!assets/asr_models/
+!assets/asr_models/.gitkeep

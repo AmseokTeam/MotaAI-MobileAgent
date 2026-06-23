@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>用于从相册选择个人主页头像。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>用于在本地完成语音识别输入。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

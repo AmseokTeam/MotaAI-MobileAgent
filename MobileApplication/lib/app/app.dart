@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/asr/local_asr_models.dart';
 import 'shared/models/companion_connect_state.dart';
 import 'pages/home/models/companion_bot_mood.dart';
 import 'pages/home/home_page.dart';
@@ -91,6 +92,7 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
           connectState: _connectState,
           settings: _settings,
           profile: _profile,
+          asrStatus: LocalAsrStatus.sherpaOnnxModelPending,
           onSettingsChanged: _settingsChanged,
           onProfileChanged: _profileChanged,
         ),

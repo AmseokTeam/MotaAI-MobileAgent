@@ -97,5 +97,5 @@ void _drawBlinkingEye(
     width: radius * 2,
     height: math.max(radius * 0.16, radius * 2 * heightScale),
   );
-  canvas.drawOval(eyeRect, Paint()..color = Colors.white);
+  canvas.drawOval(eyeRect, Paint()..color = Colors.black);
 }

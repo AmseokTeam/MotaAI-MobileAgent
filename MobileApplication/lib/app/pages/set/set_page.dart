@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:milo_ai/app/core/asr/local_asr_models.dart';
 import 'package:milo_ai/app/shared/models/companion_connect_state.dart';
 import 'package:milo_ai/app/pages/set/models/robot_settings.dart';
 import 'package:milo_ai/app/pages/set/models/robot_settings_content.dart';
@@ -18,6 +19,7 @@ class RobotSettingsPage extends StatelessWidget {
     required this.connectState,
     required this.settings,
     required this.profile,
+    required this.asrStatus,
     required this.onSettingsChanged,
     required this.onProfileChanged,
     super.key,
@@ -26,6 +28,7 @@ class RobotSettingsPage extends StatelessWidget {
   final CompanionConnectState connectState;
   final RobotSettings settings;
   final MenuProfileState profile;
+  final LocalAsrStatus asrStatus;
   final ValueChanged<RobotSettings> onSettingsChanged;
   final ValueChanged<MenuProfileState> onProfileChanged;
 
@@ -84,6 +87,23 @@ class RobotSettingsPage extends StatelessWidget {
                     subtitle: '后续接入真实蓝牙后优先恢复最近设备',
                     value: settings.autoReconnect,
                     onChanged: _setAutoReconnect,
+                  ),
+                  SettingsSwitchRow(
+                    icon: Icons.mic_rounded,
+                    title: '本地语音识别',
+                    subtitle: '使用 sherpa-onnx 在设备端转写语音',
+                    value: settings.localAsrEnabled,
+                    onChanged: _setLocalAsrEnabled,
+                  ),
+                  SettingsRow(
+                    icon: Icons.memory_rounded,
+                    title: 'ASR 引擎：${asrStatus.engineName}',
+                    subtitle: asrStatus.detail,
+                    accentColor:
+                        asrStatus.ready ? AppColors.lime : AppColors.ink,
+                    trailing: StatusPill(
+                      text: asrStatus.ready ? 'Ready' : '待配置',
+                    ),
                   ),
                 ],
               ),
@@ -161,6 +181,10 @@ class RobotSettingsPage extends StatelessWidget {
 
   void _setFaceAnimation(bool value) {
     onSettingsChanged(settings.copyWith(faceAnimation: value));
+  }
+
+  void _setLocalAsrEnabled(bool value) {
+    onSettingsChanged(settings.copyWith(localAsrEnabled: value));
   }
 
   void _showPrivacyDialog(BuildContext context) {
