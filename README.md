@@ -46,6 +46,26 @@
 
 ---
 
+## 已实现功能
+
+导入自定义api和ai进行对话
+
+## 正在实现的功能
+
+1. 接入ASR和TTS实现和AI进行语音对话
+
+2. 使用插件连接PC设备，通过手机使用codex，kimi code等进行开发
+
+3. 显示修改编辑的代码方便进行review
+
+## 插件
+
+使用插件进行连接电脑的codex等开发设备实现使用移动设备编辑代码
+
+[MotaLinkAgent](https://github.com/IwakuraRin/MotaLinkAgent)开发中
+
+---
+
 ## 项目结构快速入口
 
 如果想快速了解仓库布局和 Dart 核心模块，请查看 [项目结构](docs/project-structure/README.md)
