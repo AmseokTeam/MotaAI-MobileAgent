@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-rounded.png" alt="Mota logo" width="160" />
+  <img src="assets/motaai-logo.png" alt="Mota logo" width="160" />
 </p>
 
 <h1 align="center">MotaAI「MobileAgent」</h1>
