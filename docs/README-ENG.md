@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  A Mota mobile AI agent app with conversation, connection, and interaction flows.
+  MotaAI is a mobile AI app that lets you connect to any device, including PC and Mac. You can vibe code and review code directly from your phone. You can also have voice conversations with it, so you can develop code through natural conversation without typing. Paired with a hardware robot base, it can even become a small desktop companion robot that moves around and keeps you company.
 </p>
 
 <table>

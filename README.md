@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  一个面向 Mota 的移动端 AI Agent 应用，提供对话、连接和交互流程。
+  一个名为MotaAI的移动端AI软件，你可以使用它连接PC/Mac等任何设备，并在手机上进行代码的vibe以及review，同时你还可以和它进行语音聊天，甚至不用打字只用聊天进行代码开发。同时配合硬件机器人底座，它还可以变成可以在桌面上移动陪伴的小桌宠
 </p>
 
 <table>
@@ -48,11 +48,11 @@
 
 ## 项目结构快速入口
 
-如果想快速了解仓库布局和 Dart 核心模块，请查看 [项目结构](docs/project-structure/README.md)。
+如果想快速了解仓库布局和 Dart 核心模块，请查看 [项目结构](docs/project-structure/README.md)
 
 ## 移动端应用
 
-Flutter 客户端：[`MobileApplication`](MobileApplication)。
+Flutter 客户端：[`MobileApplication`](MobileApplication)
 
 ---
 
