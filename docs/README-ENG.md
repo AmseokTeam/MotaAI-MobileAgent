@@ -1,9 +1,9 @@
 <p align="center">
-  中文 | <a href="docs/README-ENG.md">English</a>
+  <a href="../README.md">中文</a> | English
 </p>
 
 <p align="center">
-  <img src="assets/logo-rounded.png" alt="Mota logo" width="160" />
+  <img src="../assets/logo-rounded.png" alt="Mota logo" width="160" />
 </p>
 
 <h1 align="center">MotaAI「MobileAiAgent」</h1>
@@ -12,7 +12,7 @@
   <a href="https://github.com/IwakuraRin/MotaAI-MobileAgent">
     <img src="https://img.shields.io/badge/version-1.0.0%2B1-orange?style=flat-square" alt="Version 1.0.0+1" />
   </a>
-  <a href="LICENSE">
+  <a href="../LICENSE">
     <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="GPL-3.0 license" />
   </a>
   <a href="https://github.com/IwakuraRin/MotaAI-MobileAgent/stargazers">
@@ -21,13 +21,13 @@
 </p>
 
 <p align="center">
-  一个面向 Mota 的移动端 AI Agent 应用，提供对话、连接和交互流程。
+  A Mota mobile AI agent app with conversation, connection, and interaction flows.
 </p>
 
 <table>
   <tr>
     <td width="58%">
-      <img src="assets/github-star-demo.gif" alt="GitHub star demo" width="100%" />
+      <img src="../assets/github-star-demo.gif" alt="GitHub star demo" width="100%" />
     </td>
     <td width="42%" align="center">
       <strong>如果你对我们的项目感兴趣，求一个小小的 Star 作为支持。</strong><br />
@@ -36,27 +36,27 @@
   </tr>
 </table>
 
-## 快速预览
+## Quick Preview
 
 <p align="center">
-  <img src="assets/quick-preview/preview-1.jpg" alt="Mota quick preview 1" width="30%" />
-  <img src="assets/quick-preview/preview-2.jpg" alt="Mota quick preview 2" width="30%" />
-  <img src="assets/quick-preview/preview-demo.gif" alt="Mota quick preview demo" width="30%" />
+  <img src="../assets/quick-preview/preview-1.jpg" alt="Mota quick preview 1" width="30%" />
+  <img src="../assets/quick-preview/preview-2.jpg" alt="Mota quick preview 2" width="30%" />
+  <img src="../assets/quick-preview/preview-demo.gif" alt="Mota quick preview demo" width="30%" />
 </p>
 
 ---
 
-## 项目结构快速入口
+## Quick Project Structure
 
-如果想快速了解仓库布局和 Dart 核心模块，请查看 [项目结构](docs/project-structure/README.md)。
+For a fast walkthrough of the repository layout and Dart core modules, see [Project Structure](project-structure/README.md).
 
-## 移动端应用
+## Mobile Application
 
-Flutter 客户端：[`MobileApplication`](MobileApplication)。
+Flutter client: [`MobileApplication`](../MobileApplication).
 
 ---
 
-## Star 历史
+## Star History
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=IwakuraRin/MotaAI-MobileAgent&type=date&theme=dark&legend=top-left" />
@@ -64,4 +64,4 @@ Flutter 客户端：[`MobileApplication`](MobileApplication)。
   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=IwakuraRin/MotaAI-MobileAgent&type=date&legend=top-left" />
 </picture>
 
-[实时图表](https://www.star-history.com/IwakuraRin/MotaAI-MobileAgent)
+[Live chart](https://www.star-history.com/IwakuraRin/MotaAI-MobileAgent)
