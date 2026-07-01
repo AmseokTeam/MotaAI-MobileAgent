@@ -2,7 +2,7 @@
   <img src="assets/logo-rounded.png" alt="Mota logo" width="160" />
 </p>
 
-<h1 align="center">Mota「DeskAgentBot」</h1>
+<h1 align="center">MotaAI「MobileAgent」</h1>
 
 <p align="center">
   <a href="https://github.com/IwakuraRin/Mota.DeskAgentBot">
