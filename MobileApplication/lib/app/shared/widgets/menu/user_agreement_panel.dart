@@ -223,7 +223,7 @@ class _AgreementContact extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            '如果你对用户协议有疑问，可以通过以下方式联系我们：\n\n开发者/团队名称：SonKihon linsion\n联系邮箱：linsion07@outlook.com',
+            '如果你对用户协议有疑问，可以通过以下方式联系我们：\n\n开发团队：AmseokTech\n联系邮箱：linsion07@outlook.com',
             style: TextStyle(
               color: AppColors.ink,
               fontSize: 13,

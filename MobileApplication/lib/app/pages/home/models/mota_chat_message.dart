@@ -14,6 +14,15 @@ class MotaChatMessage {
   final DateTime createdAt;
 
   bool get isUser => sender == MotaChatSender.user;
+
+  MotaChatMessage copyWith({String? text}) {
+    return MotaChatMessage(
+      id: id,
+      sender: sender,
+      text: text ?? this.text,
+      createdAt: createdAt,
+    );
+  }
 }
 
 enum MotaChatSender { user, assistant }
