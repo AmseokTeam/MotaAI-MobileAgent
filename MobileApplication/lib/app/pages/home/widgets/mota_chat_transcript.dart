@@ -27,14 +27,25 @@ class MotaChatTranscript extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.symmetric(vertical: 16),
           children: [
-            for (final message in messages)
+            for (final message in messages.where((message) {
+              return message.isUser || message.text.trim().isNotEmpty;
+            }))
               _MotaMessageBubble(message: message),
-            if (chatController.isSending) const _MotaThinkingBubble(),
+            if (_shouldShowThinking(chatController)) const _MotaThinkingBubble(),
             if (errorText != null) _MotaErrorBubble(message: errorText),
           ],
         );
       },
     );
+  }
+
+  bool _shouldShowThinking(MotaChatController chatController) {
+    if (!chatController.isSending) {
+      return false;
+    }
+
+    final messages = chatController.messages;
+    return messages.isEmpty || messages.last.text.trim().isEmpty;
   }
 }
 
@@ -133,7 +144,7 @@ class _MotaErrorBubble extends StatelessWidget {
           color: AppColors.danger.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Text(
+        child: SelectableText(
           message,
           style: const TextStyle(
             color: AppColors.danger,

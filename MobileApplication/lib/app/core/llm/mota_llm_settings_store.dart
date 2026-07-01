@@ -4,18 +4,88 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+class MotaLlmProviderPreset {
+  const MotaLlmProviderPreset({
+    required this.id,
+    required this.name,
+    required this.baseUrl,
+    required this.defaultModelName,
+  });
+
+  final String id;
+  final String name;
+  final String baseUrl;
+  final String defaultModelName;
+
+  static const MotaLlmProviderPreset openAi = MotaLlmProviderPreset(
+    id: 'openai',
+    name: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    defaultModelName: 'gpt-4o-mini',
+  );
+
+  static const MotaLlmProviderPreset kimi = MotaLlmProviderPreset(
+    id: 'kimi',
+    name: 'Kimi',
+    baseUrl: 'https://api.moonshot.cn/v1',
+    defaultModelName: 'kimi-k2.6',
+  );
+
+  static const MotaLlmProviderPreset deepSeek = MotaLlmProviderPreset(
+    id: 'deepseek',
+    name: 'DeepSeek',
+    baseUrl: 'https://api.deepseek.com',
+    defaultModelName: 'deepseek-v4-flash',
+  );
+
+  static const MotaLlmProviderPreset custom = MotaLlmProviderPreset(
+    id: 'custom',
+    name: '自定义',
+    baseUrl: '',
+    defaultModelName: '',
+  );
+
+  static const MotaLlmProviderPreset defaultPreset = kimi;
+
+  static const List<MotaLlmProviderPreset> all = <MotaLlmProviderPreset>[
+    openAi,
+    kimi,
+    deepSeek,
+    custom,
+  ];
+
+  static MotaLlmProviderPreset byId(String? id) {
+    for (final preset in all) {
+      if (preset.id == id) {
+        return preset;
+      }
+    }
+    return defaultPreset;
+  }
+}
+
 class MotaLlmProfile {
   const MotaLlmProfile({
     required this.id,
+    required this.providerId,
+    required this.providerName,
+    required this.baseUrl,
     required this.modelName,
     required this.apiKey,
   });
 
   final String id;
+  final String providerId;
+  final String providerName;
+  final String baseUrl;
   final String modelName;
   final String apiKey;
 
-  bool get isReady => modelName.trim().isNotEmpty && apiKey.trim().isNotEmpty;
+  bool get isReady {
+    return baseUrl.trim().isNotEmpty &&
+        modelName.trim().isNotEmpty &&
+        apiKey.trim().isNotEmpty;
+  }
 
   String get maskedApiKey {
     final trimmedKey = apiKey.trim();
@@ -31,6 +101,9 @@ class MotaLlmProfile {
   Map<String, String> toMetadataJson() {
     return <String, String>{
       'id': id,
+      'providerId': providerId,
+      'providerName': providerName,
+      'baseUrl': baseUrl,
       'modelName': modelName,
     };
   }
@@ -48,9 +121,35 @@ class MotaLlmProfile {
       return null;
     }
 
+    final providerId = json['providerId'];
+    final preset = MotaLlmProviderPreset.byId(
+      providerId is String ? providerId.trim() : null,
+    );
+    final providerName = json['providerName'];
+    final baseUrl = json['baseUrl'];
+
+    final resolvedProviderId =
+        providerId is String && providerId.trim().isNotEmpty
+            ? providerId.trim()
+            : preset.id;
+    final resolvedBaseUrl = baseUrl is String && baseUrl.trim().isNotEmpty
+        ? baseUrl.trim()
+        : preset.baseUrl;
+
     return MotaLlmProfile(
       id: id.trim(),
-      modelName: modelName.trim(),
+      providerId: resolvedProviderId,
+      providerName: providerName is String && providerName.trim().isNotEmpty
+          ? providerName.trim()
+          : preset.name,
+      baseUrl: MotaLlmSettingsStore.normalizeBaseUrl(
+        providerId: resolvedProviderId,
+        baseUrl: resolvedBaseUrl,
+      ),
+      modelName: MotaLlmSettingsStore.normalizeModelName(
+        providerId: resolvedProviderId,
+        modelName: modelName.trim(),
+      ),
       apiKey: apiKey.trim(),
     );
   }
@@ -60,7 +159,8 @@ class MotaLlmSettingsStore {
   MotaLlmSettingsStore({FlutterSecureStorage? storage})
       : _storage = storage ?? _defaultStorage;
 
-  static const String defaultBaseUrl = 'https://api.openai.com/v1';
+  static const String defaultBaseUrl = 'https://api.moonshot.cn/v1';
+  static const String defaultModelName = 'kimi-k2.6';
 
   static const String _profilesKey = 'mota_llm_profiles';
   static const String _selectedProfileIdKey = 'mota_llm_selected_profile_id';
@@ -131,12 +231,24 @@ class MotaLlmSettingsStore {
   }
 
   Future<MotaLlmProfile> addProfile({
+    required String providerId,
+    required String providerName,
+    required String baseUrl,
     required String modelName,
     required String apiKey,
   }) async {
     final profile = MotaLlmProfile(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      modelName: modelName.trim(),
+      providerId: providerId.trim(),
+      providerName: providerName.trim(),
+      baseUrl: normalizeBaseUrl(
+        providerId: providerId.trim(),
+        baseUrl: baseUrl.trim(),
+      ),
+      modelName: normalizeModelName(
+        providerId: providerId.trim(),
+        modelName: modelName.trim(),
+      ),
       apiKey: apiKey.trim(),
     );
 
@@ -171,5 +283,37 @@ class MotaLlmSettingsStore {
 
   String _apiKeyStorageKey(String id) {
     return '$_apiKeyPrefix$id';
+  }
+
+  static String normalizeBaseUrl({
+    required String providerId,
+    required String baseUrl,
+  }) {
+    final normalizedBaseUrl = baseUrl.trim().replaceFirst(RegExp(r'/+$'), '');
+    if (providerId == MotaLlmProviderPreset.kimi.id &&
+        normalizedBaseUrl == 'https://api.moonshot.cn') {
+      return MotaLlmProviderPreset.kimi.baseUrl;
+    }
+    if (providerId == MotaLlmProviderPreset.deepSeek.id &&
+        normalizedBaseUrl == 'https://api.deepseek.com/v1') {
+      return MotaLlmProviderPreset.deepSeek.baseUrl;
+    }
+    return normalizedBaseUrl;
+  }
+
+  static String normalizeModelName({
+    required String providerId,
+    required String modelName,
+  }) {
+    final normalizedModelName = modelName.trim();
+    if (providerId == MotaLlmProviderPreset.kimi.id &&
+        normalizedModelName.toLowerCase() == 'kimi') {
+      return MotaLlmProviderPreset.kimi.defaultModelName;
+    }
+    if (providerId == MotaLlmProviderPreset.deepSeek.id &&
+        normalizedModelName.toLowerCase() == 'deepseek') {
+      return MotaLlmProviderPreset.deepSeek.defaultModelName;
+    }
+    return normalizedModelName;
   }
 }

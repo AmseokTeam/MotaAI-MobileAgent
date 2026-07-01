@@ -1,20 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/asr/local_asr_models.dart';
 import 'shared/models/companion_connect_state.dart';
 import 'pages/home/models/companion_bot_mood.dart';
 import 'pages/home/home_page.dart';
 import 'pages/creative_workshop/creative_workshop_page.dart';
-import 'pages/set/models/robot_settings.dart';
 import 'pages/set/set_page.dart';
 import 'router/app_router.dart';
 import 'shared/theme/app_colors.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/floating_bottom_bar.dart';
-import 'shared/widgets/menu/app_menu_models.dart';
 
 class MiloAiApp extends StatelessWidget
 //你知道这里为什么是Class MiloAiApp吗，因为Milo是Mota的亲姐姐
@@ -41,11 +36,6 @@ class CompanionRobotApp extends StatefulWidget {
 }
 
 class _CompanionRobotAppState extends State<CompanionRobotApp> {
-  static const String _nicknameKey = 'menu_profile_nickname';
-  static const String _avatarEmojiKey = 'menu_profile_avatar_emoji';
-  static const String _avatarImageKey = 'menu_profile_avatar_image';
-  static const String _profileBioKey = 'menu_profile_bio';
-  static const String _profileTagsKey = 'menu_profile_tags';
   static const String _agreementAcceptedKey = 'hasAcceptedUserAgreement';
   static const String _agreementVersionKey = 'agreementVersion';
   static const String _currentAgreementVersion = '2026-07-01';
@@ -53,18 +43,12 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
   final CompanionBotMood _mood = CompanionBotMood.neutral;
   final CompanionConnectState _connectState =
       CompanionConnectState.disconnected;
-  RobotSettings _settings = const RobotSettings();
-  MenuProfileState _profile = const MenuProfileState(
-    nickname: 'Lin Robot 用户',
-    avatarEmoji: '🤖',
-  );
   RobotTab _currentTab = RobotTab.chat;
   bool _agreementDialogVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
     _checkAgreementAcceptance();
   }
 
@@ -93,33 +77,8 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
       RobotTab.creativeWorkshop => const CreativeWorkshopPage(),
       RobotTab.settings => RobotSettingsPage(
           connectState: _connectState,
-          settings: _settings,
-          profile: _profile,
-          asrStatus: LocalAsrStatus.sherpaOnnxModelPending,
-          onSettingsChanged: _settingsChanged,
-          onProfileChanged: _profileChanged,
         ),
     };
-  }
-
-  Future<void> _loadProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    final image = prefs.getString(_avatarImageKey);
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _profile = MenuProfileState(
-        nickname: prefs.getString(_nicknameKey) ?? _profile.nickname,
-        avatarEmoji: prefs.getString(_avatarEmojiKey) ?? _profile.avatarEmoji,
-        bio: prefs.getString(_profileBioKey) ?? _profile.bio,
-        preferenceTags:
-            prefs.getStringList(_profileTagsKey) ?? _profile.preferenceTags,
-        avatarImageBytes: image == null ? null : base64Decode(image),
-      );
-    });
   }
 
   Future<void> _checkAgreementAcceptance() async {
@@ -168,28 +127,6 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
 
     _agreementDialogVisible = false;
   }
-
-  Future<void> _profileChanged(MenuProfileState profile) async {
-    setState(() => _profile = profile);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_nicknameKey, profile.nickname);
-    await prefs.setString(_avatarEmojiKey, profile.avatarEmoji);
-    await prefs.setString(_profileBioKey, profile.bio);
-    await prefs.setStringList(_profileTagsKey, profile.preferenceTags);
-
-    final imageBytes = profile.avatarImageBytes;
-    if (imageBytes == null) {
-      await prefs.remove(_avatarImageKey);
-      return;
-    }
-
-    await prefs.setString(_avatarImageKey, base64Encode(imageBytes));
-  }
-
-  void _settingsChanged(RobotSettings settings) {
-    setState(() => _settings = settings);
-  }
 }
 
 class AgreementGateDialog extends StatefulWidget {
@@ -218,7 +155,7 @@ Mota 是一款用于机器人状态展示、蓝牙连接、表情互动、对话
 
 继续使用即表示你已阅读并同意《用户协议》和《隐私协议》。
 
-开发者/团队名称：SonKihon linsion
+开发团队：AmseokTech
 联系邮箱：linsion07@outlook.com
 ''';
 
