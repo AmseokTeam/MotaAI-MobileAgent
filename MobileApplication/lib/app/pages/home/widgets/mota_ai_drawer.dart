@@ -3,13 +3,19 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/llm/mota_llm_settings_store.dart';
+import '../../../core/pc_bridge/pc_bridge_controller.dart';
 import '../../../shared/theme/app_colors.dart';
 import 'add_ai_dialog.dart';
 
 class MotaAiDrawer extends StatefulWidget {
-  const MotaAiDrawer({required this.settingsStore, super.key});
+  const MotaAiDrawer({
+    required this.settingsStore,
+    required this.bridgeController,
+    super.key,
+  });
 
   final MotaLlmSettingsStore settingsStore;
+  final PcBridgeController bridgeController;
 
   @override
   State<MotaAiDrawer> createState() => _MotaAiDrawerState();
@@ -131,25 +137,36 @@ class _MotaAiDrawerState extends State<MotaAiDrawer> {
   Future<void> _showAddAiDialog() async {
     final draft = await showDialog<AiProfileDraft>(
       context: context,
-      builder: (context) => const AddAiDialog(),
+      builder: (context) => AddAiDialog(
+        bridgeController: widget.bridgeController,
+      ),
     );
     if (draft == null) {
       return;
     }
 
-    final profile = await widget.settingsStore.addProfile(
-      providerId: draft.provider.id,
-      providerName: draft.providerName,
-      baseUrl: draft.baseUrl,
-      modelName: draft.modelName,
-      apiKey: draft.apiKey,
-    );
+    final profile = switch (draft.kind) {
+      MotaLlmProfileKind.api => await widget.settingsStore.addProfile(
+          providerId: draft.providerId,
+          providerName: draft.providerName,
+          baseUrl: draft.baseUrl,
+          modelName: draft.modelName,
+          apiKey: draft.apiKey,
+        ),
+      MotaLlmProfileKind.pcBridge =>
+        await widget.settingsStore.addPcBridgeProfile(),
+    };
+    if (!mounted) {
+      return;
+    }
+
+    final profiles = await widget.settingsStore.readProfiles();
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _profiles = <MotaLlmProfile>[..._profiles, profile];
+      _profiles = profiles;
       _selectedProfileId = profile.id;
     });
   }
@@ -220,7 +237,9 @@ class _AiProfileTile extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.auto_awesome_rounded,
+                profile.isPcBridge
+                    ? Icons.computer_rounded
+                    : Icons.auto_awesome_rounded,
                 color: selected ? AppColors.ink : AppColors.orange,
                 size: 21,
               ),
@@ -231,7 +250,9 @@ class _AiProfileTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${profile.providerName} · ${profile.modelName}',
+                    profile.isPcBridge
+                        ? profile.providerName
+                        : '${profile.providerName} · ${profile.modelName}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -242,7 +263,7 @@ class _AiProfileTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    profile.maskedApiKey,
+                    profile.isPcBridge ? '已连接，可作为聊天后端' : profile.maskedApiKey,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(

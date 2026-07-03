@@ -39,6 +39,7 @@ void main() {
     ];
     const kimiProfile = MotaLlmProfile(
       id: 'kimi-profile',
+      kind: MotaLlmProfileKind.api,
       providerId: 'kimi',
       providerName: 'Kimi',
       baseUrl: 'https://api.moonshot.cn/v1',
@@ -47,6 +48,7 @@ void main() {
     );
     const customProfile = MotaLlmProfile(
       id: 'custom-profile',
+      kind: MotaLlmProfileKind.api,
       providerId: 'custom',
       providerName: '自定义',
       baseUrl: 'https://api.example.com/v1',

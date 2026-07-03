@@ -1,4 +1,4 @@
-// 文件作用：管理 MotaLink Agent 的连接状态、CLI 会话和终端输出。
+// 文件作用：管理 MotaLink Agent 的连接状态、聊天会话和项目文件能力。
 
 import 'dart:async';
 
@@ -32,6 +32,8 @@ class PcBridgeController extends ChangeNotifier {
 
   PcBridgeClient? _client;
   StreamSubscription<PcBridgeMessage>? _messageSubscription;
+  Completer<void>? _sessionCreationCompleter;
+  _BridgeChatRequest? _activeChatRequest;
   PcBridgeConnectionState _connectionState =
       PcBridgeConnectionState.disconnected;
   String? _sessionId;
@@ -82,11 +84,11 @@ class PcBridgeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> connect() async {
+  Future<bool> connect() async {
     await loadSettings();
     if (!_settings.canConnect) {
       _setError('请填写 PC 地址、端口和连接 Token');
-      return;
+      return false;
     }
 
     await disconnect();
@@ -103,17 +105,26 @@ class PcBridgeController extends ChangeNotifier {
         onDone: () => _handleDisconnected(null),
         cancelOnError: true,
       );
+      await client.ready.timeout(const Duration(seconds: 8));
       _connectionState = PcBridgeConnectionState.connected;
       _appendTerminalLine('已连接 MotaLink Agent\n');
+      notifyListeners();
+      return true;
     } catch (_) {
+      await _messageSubscription?.cancel();
+      _messageSubscription = null;
+      await _client?.close();
+      _client = null;
       _connectionState = PcBridgeConnectionState.disconnected;
       _setError('MotaLink Agent 连接失败');
+      notifyListeners();
+      return false;
     }
-
-    notifyListeners();
   }
 
   Future<void> disconnect() async {
+    _failSessionCreation('MotaLink Agent 已断开连接');
+    _failActiveChat('MotaLink Agent 已断开连接');
     await _messageSubscription?.cancel();
     _messageSubscription = null;
     final client = _client;
@@ -126,6 +137,50 @@ class PcBridgeController extends ChangeNotifier {
       await client.close();
     }
     notifyListeners();
+  }
+
+  Future<void> streamChatPrompt({
+    required String prompt,
+    required ValueChanged<String> onText,
+  }) async {
+    final trimmedPrompt = prompt.trim();
+    if (trimmedPrompt.isEmpty) {
+      return;
+    }
+
+    if (_activeChatRequest != null) {
+      throw const PcBridgeChatException('个人电脑 AI Agent 正在回复，请稍后再试');
+    }
+
+    if (!isConnected) {
+      final connected = await connect();
+      if (!connected) {
+        throw PcBridgeChatException(errorText ?? '个人电脑 AI Agent 连接失败');
+      }
+    }
+
+    await _ensureChatSession();
+    final client = _client;
+    final sessionId = _sessionId;
+    if (client == null || sessionId == null) {
+      throw const PcBridgeChatException('请先连接个人电脑 AI Agent');
+    }
+
+    final request = _BridgeChatRequest(
+      prompt: trimmedPrompt,
+      onText: onText,
+    );
+    _activeChatRequest = request;
+    client.sendInput(sessionId: sessionId, text: '$trimmedPrompt\n');
+
+    try {
+      await request.done;
+    } finally {
+      if (_activeChatRequest == request) {
+        _activeChatRequest = null;
+      }
+      request.dispose();
+    }
   }
 
   void createSession({int cols = 100, int rows = 30}) {
@@ -164,6 +219,48 @@ class PcBridgeController extends ChangeNotifier {
     }
 
     client.sendInput(sessionId: sessionId, text: '$text\n');
+  }
+
+  Future<void> _ensureChatSession() async {
+    if (_sessionId != null) {
+      return;
+    }
+
+    final pendingCompleter = _sessionCreationCompleter;
+    if (pendingCompleter != null) {
+      await pendingCompleter.future.timeout(const Duration(seconds: 12));
+      return;
+    }
+
+    final client = _client;
+    if (client == null || !isConnected) {
+      throw const PcBridgeChatException('请先连接个人电脑 AI Agent');
+    }
+    if (!_settings.canCreateSession) {
+      throw const PcBridgeChatException('个人电脑 AI Agent 会话配置不完整');
+    }
+
+    final completer = Completer<void>();
+    _sessionCreationCompleter = completer;
+    _creatingSession = true;
+    _clearError();
+    notifyListeners();
+    client.createSession(
+      requestId: _createRequestId(),
+      cli: _settings.cli.trim(),
+      cwd: _settings.cwd.trim(),
+      cols: 100,
+      rows: 30,
+    );
+
+    try {
+      await completer.future.timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      _sessionCreationCompleter = null;
+      _creatingSession = false;
+      _setError('个人电脑 AI Agent 启动聊天超时');
+      throw const PcBridgeChatException('个人电脑 AI Agent 启动聊天超时');
+    }
   }
 
   void interruptSession() {
@@ -294,13 +391,17 @@ class PcBridgeController extends ChangeNotifier {
       case 'session.created':
         _sessionId = message.sessionId;
         _creatingSession = false;
+        _sessionCreationCompleter?.complete();
+        _sessionCreationCompleter = null;
         _appendTerminalLine('已创建 ${_settings.cli} 会话\n');
       case 'session.output':
         _appendTerminalLine(message.text ?? '');
+        _activeChatRequest?.append(message.text ?? '');
       case 'session.exit':
         _appendTerminalLine('会话已退出，退出码 ${message.exitCode ?? 0}\n');
         _sessionId = null;
         _creatingSession = false;
+        _activeChatRequest?.finish();
       case 'project.list.result':
         _handleProjectListing(message);
       case 'project.readFile.result':
@@ -309,8 +410,11 @@ class PcBridgeController extends ChangeNotifier {
         _handleProjectDiff(message);
       case 'error':
         if (!_handleProjectError(message)) {
+          final errorMessage = message.message ?? 'MotaLink Agent 返回错误';
           _creatingSession = false;
-          _setError(message.message ?? 'MotaLink Agent 返回错误');
+          _failSessionCreation(errorMessage);
+          _failActiveChat(errorMessage);
+          _setError(errorMessage);
         }
       default:
         break;
@@ -322,12 +426,28 @@ class PcBridgeController extends ChangeNotifier {
     _connectionState = PcBridgeConnectionState.disconnected;
     _sessionId = null;
     _creatingSession = false;
+    _failSessionCreation(message ?? 'MotaLink Agent 已断开连接');
+    _failActiveChat(message ?? 'MotaLink Agent 已断开连接');
     _clearProjectLoadingState();
     if (message != null) {
       _errorText = message;
       _appendTerminalLine('$message\n');
     }
     notifyListeners();
+  }
+
+  void _failSessionCreation(String message) {
+    final completer = _sessionCreationCompleter;
+    _sessionCreationCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.completeError(PcBridgeChatException(message));
+    }
+  }
+
+  void _failActiveChat(String message) {
+    final request = _activeChatRequest;
+    _activeChatRequest = null;
+    request?.fail(PcBridgeChatException(message));
   }
 
   void _appendTerminalLine(String text) {
@@ -434,6 +554,8 @@ class PcBridgeController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _failSessionCreation('MotaLink Agent 已关闭');
+    _failActiveChat('MotaLink Agent 已关闭');
     _messageSubscription?.cancel();
     _client?.close();
     super.dispose();
@@ -454,4 +576,85 @@ class _ProjectRequest {
 
   final _ProjectRequestKind kind;
   final String? path;
+}
+
+class PcBridgeChatException implements Exception {
+  const PcBridgeChatException(this.message);
+
+  final String message;
+}
+
+class _BridgeChatRequest {
+  _BridgeChatRequest({
+    required this.prompt,
+    required this.onText,
+  }) {
+    _overallTimer = Timer(
+      const Duration(seconds: 90),
+      () => fail(const PcBridgeChatException('个人电脑 AI Agent 响应超时')),
+    );
+  }
+
+  final String prompt;
+  final ValueChanged<String> onText;
+  final StringBuffer _buffer = StringBuffer();
+  final Completer<void> _completer = Completer<void>();
+  Timer? _idleTimer;
+  Timer? _overallTimer;
+
+  Future<void> get done => _completer.future;
+
+  void append(String text) {
+    if (_completer.isCompleted || text.isEmpty) {
+      return;
+    }
+
+    _buffer.write(text);
+    final displayText = _displayText;
+    if (displayText.trim().isNotEmpty) {
+      onText(displayText);
+    }
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(milliseconds: 2200), finish);
+  }
+
+  void finish() {
+    if (_completer.isCompleted) {
+      return;
+    }
+
+    _completer.complete();
+    dispose();
+  }
+
+  void fail(Object error) {
+    if (_completer.isCompleted) {
+      return;
+    }
+
+    _completer.completeError(error);
+    dispose();
+  }
+
+  void dispose() {
+    _idleTimer?.cancel();
+    _idleTimer = null;
+    _overallTimer?.cancel();
+    _overallTimer = null;
+  }
+
+  String get _displayText {
+    var text = _sanitizeTerminalText(_buffer.toString()).trimLeft();
+    if (text.startsWith(prompt)) {
+      text = text.substring(prompt.length).trimLeft();
+    }
+    return text.trimRight();
+  }
+
+  static String _sanitizeTerminalText(String text) {
+    return text
+        .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
+        .replaceAll('\r', '')
+        .replaceAll('\u0008', '');
+  }
 }

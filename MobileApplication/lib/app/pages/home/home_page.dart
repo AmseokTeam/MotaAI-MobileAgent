@@ -24,8 +24,8 @@ class _RobotHomePageState extends State<RobotHomePage> {
   @override
   void initState() {
     super.initState();
-    _chatController = MotaChatController();
     _bridgeController = PcBridgeController()..loadSettings();
+    _chatController = MotaChatController(bridgeController: _bridgeController);
   }
 
   @override

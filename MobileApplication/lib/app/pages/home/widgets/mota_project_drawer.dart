@@ -192,7 +192,7 @@ class _ProjectFilesTab extends StatelessWidget {
     if (!controller.isConnected) {
       return const _ProjectEmptyState(
         icon: Icons.link_off_rounded,
-        title: '请先连接 PC Bridge',
+        title: '请先连接个人电脑 AI Agent',
         message: '连接 MotaLink Agent 后即可浏览当前工作目录',
       );
     }
@@ -531,7 +531,7 @@ class _ProjectDiffTab extends StatelessWidget {
     if (!controller.isConnected) {
       return const _ProjectEmptyState(
         icon: Icons.link_off_rounded,
-        title: '请先连接 PC Bridge',
+        title: '请先连接个人电脑 AI Agent',
         message: '连接 MotaLink Agent 后即可读取当前 Git 修改',
       );
     }

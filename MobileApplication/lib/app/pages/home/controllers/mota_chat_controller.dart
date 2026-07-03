@@ -7,15 +7,18 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/llm/mota_llm_chat_client.dart';
 import '../../../core/llm/mota_llm_settings_store.dart';
+import '../../../core/pc_bridge/pc_bridge_controller.dart';
 import '../models/mota_chat_message.dart';
 
 class MotaChatController extends ChangeNotifier {
   MotaChatController({
     MotaLlmSettingsStore? settingsStore,
     MotaLlmChatClient? llmClient,
+    PcBridgeController? bridgeController,
     HttpClient? httpClient,
     Duration timeout = const Duration(seconds: 30),
   })  : _settingsStore = settingsStore ?? MotaLlmSettingsStore(),
+        _bridgeController = bridgeController,
         _llmClient = llmClient ??
             MotaLlmChatClient(
               httpClient: httpClient,
@@ -24,6 +27,7 @@ class MotaChatController extends ChangeNotifier {
 
   final MotaLlmSettingsStore _settingsStore;
   final MotaLlmChatClient _llmClient;
+  final PcBridgeController? _bridgeController;
   final List<MotaChatMessage> _messages = <MotaChatMessage>[];
 
   bool _isSending = false;
@@ -47,8 +51,11 @@ class MotaChatController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _requestReplyStream(assistantMessage.id);
+      await _requestReplyStream(assistantMessage.id, text);
     } on MotaChatException catch (error) {
+      _removeEmptyAssistantMessage(assistantMessage.id);
+      _errorText = error.message;
+    } on PcBridgeChatException catch (error) {
       _removeEmptyAssistantMessage(assistantMessage.id);
       _errorText = error.message;
     } on MotaLlmChatException catch (error) {
@@ -80,10 +87,26 @@ class MotaChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _requestReplyStream(String assistantMessageId) async {
+  Future<void> _requestReplyStream(
+    String assistantMessageId,
+    String latestUserText,
+  ) async {
     final profile = await _settingsStore.readSelectedProfile();
     if (profile == null || !profile.isReady) {
       throw const MotaChatException('请点击输入框左侧 + 添加并选择 AI');
+    }
+
+    if (profile.isPcBridge) {
+      final bridgeController = _bridgeController;
+      if (bridgeController == null) {
+        throw const MotaChatException('请先连接个人电脑 AI Agent');
+      }
+
+      await bridgeController.streamChatPrompt(
+        prompt: latestUserText,
+        onText: (text) => _updateAssistantMessage(assistantMessageId, text),
+      );
+      return;
     }
 
     await _llmClient.streamChatCompletion(
@@ -104,13 +127,7 @@ class MotaChatController extends ChangeNotifier {
       );
     }).toList(growable: false);
 
-    return <MotaLlmChatMessage>[
-      const MotaLlmChatMessage(
-        role: 'system',
-        content: '你是 Mota，一个温柔、简洁、会陪用户聊天的机器人伙伴。',
-      ),
-      ...conversationMessages,
-    ];
+    return conversationMessages;
   }
 
   MotaChatMessage _createMessage(MotaChatSender sender, String text) {
