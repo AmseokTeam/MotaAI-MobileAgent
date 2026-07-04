@@ -611,7 +611,7 @@ class _BridgeChatRequest {
 
     _buffer.write(text);
     final displayText = _displayText;
-    if (displayText.trim().isNotEmpty) {
+    if (displayText != null && displayText.trim().isNotEmpty) {
       onText(displayText);
     }
     _idleTimer?.cancel();
@@ -643,18 +643,38 @@ class _BridgeChatRequest {
     _overallTimer = null;
   }
 
-  String get _displayText {
-    var text = _sanitizeTerminalText(_buffer.toString()).trimLeft();
-    if (text.startsWith(prompt)) {
-      text = text.substring(prompt.length).trimLeft();
-    }
-    return text.trimRight();
+  String? get _displayText {
+    final text = _stripPromptEcho(
+      output: _buffer.toString(),
+      prompt: prompt,
+    );
+    return text?.trimRight();
+  }
+}
+
+String? _stripPromptEcho({
+  required String output,
+  required String prompt,
+}) {
+  final sanitizedOutput = _sanitizeTerminalText(output).trimLeft();
+  final sanitizedPrompt = _sanitizeTerminalText(prompt).trim();
+  if (sanitizedPrompt.isEmpty) {
+    return sanitizedOutput;
   }
 
-  static String _sanitizeTerminalText(String text) {
-    return text
-        .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
-        .replaceAll('\r', '')
-        .replaceAll('\u0008', '');
+  final promptIndex = sanitizedOutput.indexOf(sanitizedPrompt);
+  if (promptIndex == -1) {
+    return null;
   }
+
+  return sanitizedOutput
+      .substring(promptIndex + sanitizedPrompt.length)
+      .trimLeft();
+}
+
+String _sanitizeTerminalText(String text) {
+  return text
+      .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
+      .replaceAll('\r', '')
+      .replaceAll('\u0008', '');
 }
