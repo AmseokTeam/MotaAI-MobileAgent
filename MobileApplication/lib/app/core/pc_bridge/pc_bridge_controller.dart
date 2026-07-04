@@ -667,14 +667,119 @@ String? _stripPromptEcho({
     return null;
   }
 
-  return sanitizedOutput
-      .substring(promptIndex + sanitizedPrompt.length)
-      .trimLeft();
+  final replyText =
+      sanitizedOutput.substring(promptIndex + sanitizedPrompt.length);
+  return _stripLeadingTerminalNoise(replyText, sanitizedPrompt);
 }
 
 String _sanitizeTerminalText(String text) {
   return text
+      .replaceAll(RegExp(r'\x1B\][\s\S]*?(?:\x07|\x1B\\|$)'), '')
+      .replaceAll(RegExp(r'\x1B[P^_][\s\S]*?(?:\x1B\\|$)'), '')
       .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
+      .replaceAll(RegExp(r'\x1B[()][A-Za-z0-9]'), '')
+      .replaceAll(RegExp(r'\x1B[@-Z\\-_]'), '')
+      .replaceAll(RegExp(r'\](?:0|1|2|10|11);[^\n]*'), '')
       .replaceAll('\r', '')
-      .replaceAll('\u0008', '');
+      .replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
 }
+
+String _stripLeadingTerminalNoise(String text, String prompt) {
+  var value = _dropTerminalNoiseLines(text, prompt);
+  for (var i = 0; i < 12; i++) {
+    final before = value;
+    value = value.trimLeft().replaceFirst(_terminalFramePrefixPattern, '');
+
+    if (prompt.isNotEmpty && value.startsWith(prompt)) {
+      final afterPrompt = value.substring(prompt.length).trimLeft();
+      if (afterPrompt.isEmpty ||
+          afterPrompt.startsWith(prompt) ||
+          _startsWithTerminalNoise(afterPrompt)) {
+        value = afterPrompt;
+        continue;
+      }
+    }
+
+    final noiseMatch = _matchLeadingTerminalNoise(value);
+    if (noiseMatch != null) {
+      value = value.substring(noiseMatch.end);
+      continue;
+    }
+
+    if (before == value) {
+      break;
+    }
+  }
+  return _dropTerminalNoiseLines(value, prompt).trimLeft();
+}
+
+String _dropTerminalNoiseLines(String text, String prompt) {
+  return text
+      .split('\n')
+      .where((line) => !_isTerminalNoiseLine(line, prompt))
+      .join('\n');
+}
+
+bool _isTerminalNoiseLine(String line, String prompt) {
+  final trimmedLine = line.trim();
+  if (trimmedLine.isEmpty) {
+    return false;
+  }
+  if (prompt.isNotEmpty && trimmedLine == prompt) {
+    return true;
+  }
+  if (prompt.isNotEmpty && trimmedLine.startsWith(prompt)) {
+    final afterPrompt = trimmedLine.substring(prompt.length).trimLeft();
+    if (afterPrompt.isEmpty || _startsWithTerminalNoise(afterPrompt)) {
+      return true;
+    }
+  }
+  return _terminalNoiseLinePatterns.any((pattern) {
+    return pattern.hasMatch(trimmedLine);
+  });
+}
+
+bool _startsWithTerminalNoise(String text) {
+  return _matchLeadingTerminalNoise(text.trimLeft()) != null;
+}
+
+RegExpMatch? _matchLeadingTerminalNoise(String text) {
+  for (final pattern in _leadingTerminalNoisePatterns) {
+    final match = pattern.firstMatch(text);
+    if (match != null) {
+      return match;
+    }
+  }
+  return null;
+}
+
+final RegExp _terminalFramePrefixPattern = RegExp(
+  '^[\\s\\|>_\\u2500-\\u257F]+',
+);
+
+final List<RegExp> _leadingTerminalNoisePatterns = <RegExp>[
+  RegExp(r'^[^A-Za-z0-9]*Update available[\s\S]*?(?:Press enter to continue|$)',
+      caseSensitive: false),
+  RegExp(r'^Run npm install[\s\S]*?(?:release notes:|$)', caseSensitive: false),
+  RegExp(r'^(?:OpenAI Codex|\(v[\d.]+\)|model:\s*|directory:\s*)[^\n]*',
+      caseSensitive: false),
+  RegExp(
+      '^(?:gpt[-\\w.]*\\s*(?:low|medium|high)?\\s*[\\u00B7\\u2022]\\s*~?[^\\n]*)',
+      caseSensitive: false),
+  RegExp(r'^[^A-Za-z0-9]*MCP startup incomplete[^\n]*', caseSensitive: false),
+  RegExp(r'^Starting MCP servers(?:\s*\([^)]+\))?:?[^\n]*',
+      caseSensitive: false),
+];
+
+final List<RegExp> _terminalNoiseLinePatterns = <RegExp>[
+  RegExp(r'^[^A-Za-z0-9]*Update available', caseSensitive: false),
+  RegExp(r'^(?:Release notes:|Press enter to continue|Run npm install)',
+      caseSensitive: false),
+  RegExp(r'^(?:OpenAI Codex|\(v[\d.]+\)|model:|directory:)',
+      caseSensitive: false),
+  RegExp('^gpt[-\\w.]*\\s*(?:low|medium|high)?\\s*[\\u00B7\\u2022]\\s*~?',
+      caseSensitive: false),
+  RegExp(r'^[^A-Za-z0-9]*MCP startup incomplete', caseSensitive: false),
+  RegExp(r'^Starting MCP servers', caseSensitive: false),
+  RegExp(r'^\(\d+/\d+\):', caseSensitive: false),
+];
