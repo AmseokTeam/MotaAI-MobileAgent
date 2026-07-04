@@ -14,11 +14,13 @@ class MotaChatInput extends StatefulWidget {
   const MotaChatInput({
     required this.chatController,
     required this.bridgeController,
+    required this.onPcConnectionFailed,
     super.key,
   });
 
   final MotaChatController chatController;
   final PcBridgeController bridgeController;
+  final VoidCallback onPcConnectionFailed;
 
   @override
   State<MotaChatInput> createState() => _MotaChatInputState();
@@ -134,6 +136,7 @@ class _MotaChatInputState extends State<MotaChatInput> {
       builder: (context) => MotaAiDrawer(
         settingsStore: _settingsStore,
         bridgeController: widget.bridgeController,
+        onPcConnectionFailed: widget.onPcConnectionFailed,
       ),
     );
   }

@@ -11,11 +11,13 @@ class MotaAiDrawer extends StatefulWidget {
   const MotaAiDrawer({
     required this.settingsStore,
     required this.bridgeController,
+    required this.onPcConnectionFailed,
     super.key,
   });
 
   final MotaLlmSettingsStore settingsStore;
   final PcBridgeController bridgeController;
+  final VoidCallback onPcConnectionFailed;
 
   @override
   State<MotaAiDrawer> createState() => _MotaAiDrawerState();
@@ -24,6 +26,7 @@ class MotaAiDrawer extends StatefulWidget {
 class _MotaAiDrawerState extends State<MotaAiDrawer> {
   List<MotaLlmProfile> _profiles = <MotaLlmProfile>[];
   String? _selectedProfileId;
+  String? _connectingProfileId;
   bool _loading = true;
 
   @override
@@ -95,10 +98,15 @@ class _MotaAiDrawerState extends State<MotaAiDrawer> {
                       itemBuilder: (context, index) {
                         final profile = _profiles[index];
                         final selected = profile.id == _selectedProfileId;
+                        final connecting = profile.id == _connectingProfileId;
                         return _AiProfileTile(
                           profile: profile,
                           selected: selected,
-                          onTap: () => _selectProfile(profile),
+                          connecting: connecting,
+                          bridgeConnected: widget.bridgeController.isConnected,
+                          onTap: _connectingProfileId == null
+                              ? () => _selectProfile(profile)
+                              : null,
                         );
                       },
                     ),
@@ -126,12 +134,31 @@ class _MotaAiDrawerState extends State<MotaAiDrawer> {
   }
 
   Future<void> _selectProfile(MotaLlmProfile profile) async {
-    await widget.settingsStore.selectProfile(profile.id);
-    if (!mounted) {
-      return;
-    }
+    setState(() => _connectingProfileId = profile.id);
 
-    setState(() => _selectedProfileId = profile.id);
+    try {
+      if (profile.isPcBridge && !widget.bridgeController.isConnected) {
+        final connected = await widget.bridgeController.connect();
+        if (!mounted) {
+          return;
+        }
+        if (!connected) {
+          widget.onPcConnectionFailed();
+          return;
+        }
+      }
+
+      await widget.settingsStore.selectProfile(profile.id);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() => _selectedProfileId = profile.id);
+    } finally {
+      if (mounted) {
+        setState(() => _connectingProfileId = null);
+      }
+    }
   }
 
   Future<void> _showAddAiDialog() async {
@@ -214,12 +241,16 @@ class _AiProfileTile extends StatelessWidget {
   const _AiProfileTile({
     required this.profile,
     required this.selected,
+    required this.connecting,
+    required this.bridgeConnected,
     required this.onTap,
   });
 
   final MotaLlmProfile profile;
   final bool selected;
-  final VoidCallback onTap;
+  final bool connecting;
+  final bool bridgeConnected;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +294,7 @@ class _AiProfileTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    profile.isPcBridge ? '已连接，可作为聊天后端' : profile.maskedApiKey,
+                    _subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -275,11 +306,33 @@ class _AiProfileTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (selected)
+            if (connecting)
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.orange,
+                ),
+              )
+            else if (selected)
               const Icon(Icons.check_circle_rounded, color: AppColors.lime),
           ],
         ),
       ),
     );
+  }
+
+  String get _subtitle {
+    if (!profile.isPcBridge) {
+      return profile.maskedApiKey;
+    }
+    if (connecting) {
+      return '正在连接电脑';
+    }
+    if (bridgeConnected) {
+      return '已连接，可作为聊天后端';
+    }
+    return '选择后尝试连接电脑';
   }
 }

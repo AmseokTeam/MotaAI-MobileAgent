@@ -271,14 +271,18 @@ class MotaLlmSettingsStore {
     }
 
     final selectedId = await _storage.read(key: _selectedProfileIdKey);
+    if (selectedId == null || selectedId.trim().isEmpty) {
+      return null;
+    }
+
     for (final profile in profiles) {
       if (profile.id == selectedId) {
         return profile;
       }
     }
 
-    await selectProfile(profiles.first.id);
-    return profiles.first;
+    await clearSelectedProfile();
+    return null;
   }
 
   Future<MotaLlmProfile> addProfile({
@@ -340,6 +344,10 @@ class MotaLlmSettingsStore {
 
   Future<void> selectProfile(String profileId) {
     return _storage.write(key: _selectedProfileIdKey, value: profileId);
+  }
+
+  Future<void> clearSelectedProfile() {
+    return _storage.delete(key: _selectedProfileIdKey);
   }
 
   Future<void> clearAll() async {
