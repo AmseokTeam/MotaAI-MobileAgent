@@ -67,6 +67,7 @@ class MotaLlmProviderPreset {
 class MotaLlmProfile {
   const MotaLlmProfile({
     required this.id,
+    required this.kind,
     required this.providerId,
     required this.providerName,
     required this.baseUrl,
@@ -75,19 +76,29 @@ class MotaLlmProfile {
   });
 
   final String id;
+  final MotaLlmProfileKind kind;
   final String providerId;
   final String providerName;
   final String baseUrl;
   final String modelName;
   final String apiKey;
 
+  bool get isApi => kind == MotaLlmProfileKind.api;
+  bool get isPcBridge => kind == MotaLlmProfileKind.pcBridge;
+
   bool get isReady {
+    if (isPcBridge) {
+      return true;
+    }
     return baseUrl.trim().isNotEmpty &&
         modelName.trim().isNotEmpty &&
         apiKey.trim().isNotEmpty;
   }
 
   String get maskedApiKey {
+    if (isPcBridge) {
+      return '本机 Agent';
+    }
     final trimmedKey = apiKey.trim();
     if (trimmedKey.isEmpty) {
       return '未配置';
@@ -101,6 +112,7 @@ class MotaLlmProfile {
   Map<String, String> toMetadataJson() {
     return <String, String>{
       'id': id,
+      'kind': kind.storageId,
       'providerId': providerId,
       'providerName': providerName,
       'baseUrl': baseUrl,
@@ -117,6 +129,20 @@ class MotaLlmProfile {
     if (id is! String || id.trim().isEmpty) {
       return null;
     }
+
+    final kind = MotaLlmProfileKind.fromStorageValue(json['kind']);
+    if (kind == MotaLlmProfileKind.pcBridge) {
+      return MotaLlmProfile(
+        id: id.trim(),
+        kind: MotaLlmProfileKind.pcBridge,
+        providerId: MotaLlmSettingsStore.pcBridgeProviderId,
+        providerName: MotaLlmSettingsStore.pcBridgeProviderName,
+        baseUrl: '',
+        modelName: MotaLlmSettingsStore.pcBridgeModelName,
+        apiKey: '',
+      );
+    }
+
     if (modelName is! String || modelName.trim().isEmpty) {
       return null;
     }
@@ -138,6 +164,7 @@ class MotaLlmProfile {
 
     return MotaLlmProfile(
       id: id.trim(),
+      kind: MotaLlmProfileKind.api,
       providerId: resolvedProviderId,
       providerName: providerName is String && providerName.trim().isNotEmpty
           ? providerName.trim()
@@ -155,12 +182,36 @@ class MotaLlmProfile {
   }
 }
 
+enum MotaLlmProfileKind {
+  api('api'),
+  pcBridge('pc_bridge');
+
+  const MotaLlmProfileKind(this.storageId);
+
+  final String storageId;
+
+  static MotaLlmProfileKind fromStorageValue(Object? value) {
+    if (value is String) {
+      for (final kind in MotaLlmProfileKind.values) {
+        if (kind.storageId == value) {
+          return kind;
+        }
+      }
+    }
+    return MotaLlmProfileKind.api;
+  }
+}
+
 class MotaLlmSettingsStore {
   MotaLlmSettingsStore({FlutterSecureStorage? storage})
       : _storage = storage ?? _defaultStorage;
 
   static const String defaultBaseUrl = 'https://api.moonshot.cn/v1';
   static const String defaultModelName = 'kimi-k2.6';
+  static const String pcBridgeProfileId = 'pc_bridge_agent';
+  static const String pcBridgeProviderId = 'pc_bridge';
+  static const String pcBridgeProviderName = '个人电脑 AI Agent';
+  static const String pcBridgeModelName = 'MotaLink Agent';
 
   static const String _profilesKey = 'mota_llm_profiles';
   static const String _selectedProfileIdKey = 'mota_llm_selected_profile_id';
@@ -220,14 +271,18 @@ class MotaLlmSettingsStore {
     }
 
     final selectedId = await _storage.read(key: _selectedProfileIdKey);
+    if (selectedId == null || selectedId.trim().isEmpty) {
+      return null;
+    }
+
     for (final profile in profiles) {
       if (profile.id == selectedId) {
         return profile;
       }
     }
 
-    await selectProfile(profiles.first.id);
-    return profiles.first;
+    await clearSelectedProfile();
+    return null;
   }
 
   Future<MotaLlmProfile> addProfile({
@@ -239,6 +294,7 @@ class MotaLlmSettingsStore {
   }) async {
     final profile = MotaLlmProfile(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
+      kind: MotaLlmProfileKind.api,
       providerId: providerId.trim(),
       providerName: providerName.trim(),
       baseUrl: normalizeBaseUrl(
@@ -261,8 +317,37 @@ class MotaLlmSettingsStore {
     return profile;
   }
 
+  Future<MotaLlmProfile> addPcBridgeProfile() async {
+    final profile = const MotaLlmProfile(
+      id: pcBridgeProfileId,
+      kind: MotaLlmProfileKind.pcBridge,
+      providerId: pcBridgeProviderId,
+      providerName: pcBridgeProviderName,
+      baseUrl: '',
+      modelName: pcBridgeModelName,
+      apiKey: '',
+    );
+
+    final profiles = await readProfiles();
+    final bridgeIndex = profiles.indexWhere((item) => item.isPcBridge);
+    final updatedProfiles = <MotaLlmProfile>[...profiles];
+    if (bridgeIndex == -1) {
+      updatedProfiles.add(profile);
+    } else {
+      updatedProfiles[bridgeIndex] = profile;
+    }
+
+    await _writeProfilesMetadata(updatedProfiles);
+    await selectProfile(profile.id);
+    return profile;
+  }
+
   Future<void> selectProfile(String profileId) {
     return _storage.write(key: _selectedProfileIdKey, value: profileId);
+  }
+
+  Future<void> clearSelectedProfile() {
+    return _storage.delete(key: _selectedProfileIdKey);
   }
 
   Future<void> clearAll() async {

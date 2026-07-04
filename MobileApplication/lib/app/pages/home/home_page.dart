@@ -9,9 +9,16 @@ import 'widgets/mota_chat_transcript.dart';
 import 'widgets/robot_face_canvas.dart';
 
 class RobotHomePage extends StatefulWidget {
-  const RobotHomePage({required this.mood, super.key});
+  const RobotHomePage({
+    required this.mood,
+    required this.bridgeController,
+    required this.onPcConnectionFailed,
+    super.key,
+  });
 
   final CompanionBotMood mood;
+  final PcBridgeController bridgeController;
+  final VoidCallback onPcConnectionFailed;
 
   @override
   State<RobotHomePage> createState() => _RobotHomePageState();
@@ -19,18 +26,17 @@ class RobotHomePage extends StatefulWidget {
 
 class _RobotHomePageState extends State<RobotHomePage> {
   late final MotaChatController _chatController;
-  late final PcBridgeController _bridgeController;
 
   @override
   void initState() {
     super.initState();
-    _chatController = MotaChatController();
-    _bridgeController = PcBridgeController()..loadSettings();
+    _chatController = MotaChatController(
+      bridgeController: widget.bridgeController,
+    );
   }
 
   @override
   void dispose() {
-    _bridgeController.dispose();
     _chatController.dispose();
     super.dispose();
   }
@@ -95,7 +101,8 @@ class _RobotHomePageState extends State<RobotHomePage> {
                         ),
                         MotaChatInput(
                           chatController: _chatController,
-                          bridgeController: _bridgeController,
+                          bridgeController: widget.bridgeController,
+                          onPcConnectionFailed: widget.onPcConnectionFailed,
                         ),
                       ],
                     ),

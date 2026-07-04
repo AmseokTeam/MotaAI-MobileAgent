@@ -8,18 +8,19 @@ import '../../../shared/theme/app_colors.dart';
 import '../controllers/mota_chat_controller.dart';
 import 'mota_action_drawer.dart';
 import 'mota_ai_drawer.dart';
-import 'mota_bridge_drawer.dart';
 import 'mota_project_drawer.dart';
 
 class MotaChatInput extends StatefulWidget {
   const MotaChatInput({
     required this.chatController,
     required this.bridgeController,
+    required this.onPcConnectionFailed,
     super.key,
   });
 
   final MotaChatController chatController;
   final PcBridgeController bridgeController;
+  final VoidCallback onPcConnectionFailed;
 
   @override
   State<MotaChatInput> createState() => _MotaChatInputState();
@@ -122,7 +123,6 @@ class _MotaChatInputState extends State<MotaChatInput> {
       backgroundColor: Colors.transparent,
       builder: (context) => MotaActionDrawer(
         onOpenAi: _showAiDrawer,
-        onOpenBridge: _showBridgeDrawer,
         onOpenProject: _showProjectDrawer,
       ),
     );
@@ -133,18 +133,10 @@ class _MotaChatInputState extends State<MotaChatInput> {
       context: context,
       showDragHandle: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => MotaAiDrawer(settingsStore: _settingsStore),
-    );
-  }
-
-  Future<void> _showBridgeDrawer() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: false,
-      backgroundColor: Colors.transparent,
-      builder: (context) => MotaBridgeDrawer(
+      builder: (context) => MotaAiDrawer(
+        settingsStore: _settingsStore,
         bridgeController: widget.bridgeController,
+        onPcConnectionFailed: widget.onPcConnectionFailed,
       ),
     );
   }

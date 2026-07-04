@@ -16,7 +16,7 @@ void main() {
     await tester.pumpWidget(_ProjectDrawerHarness(controller: controller));
     await tester.pump();
 
-    expect(find.text('请先连接 PC Bridge'), findsOneWidget);
+    expect(find.text('请先连接个人电脑 AI Agent'), findsOneWidget);
     expect(find.text('连接 MotaLink Agent 后即可浏览当前工作目录'), findsOneWidget);
   });
 

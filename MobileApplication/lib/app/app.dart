@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'core/agreement/agreement_acceptance_store.dart';
+import 'core/llm/mota_llm_settings_store.dart';
+import 'core/pc_bridge/pc_bridge_controller.dart';
 import 'shared/models/companion_connect_state.dart';
 import 'pages/home/models/companion_bot_mood.dart';
 import 'pages/home/home_page.dart';
@@ -11,6 +13,7 @@ import 'shared/theme/app_colors.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/agreement_gate_dialog.dart';
 import 'shared/widgets/floating_bottom_bar.dart';
+import 'shared/widgets/pc_connection_failure_overlay.dart';
 
 class MiloAiApp extends StatelessWidget
 //你知道这里为什么是Class MiloAiApp吗，因为Milo是Mota的亲姐姐
@@ -39,9 +42,12 @@ class CompanionRobotApp extends StatefulWidget {
 class _CompanionRobotAppState extends State<CompanionRobotApp> {
   final AgreementAcceptanceStore _agreementStore =
       const AgreementAcceptanceStore();
+  final MotaLlmSettingsStore _llmSettingsStore = MotaLlmSettingsStore();
+  final PcBridgeController _bridgeController = PcBridgeController();
   final CompanionBotMood _mood = CompanionBotMood.neutral;
   final CompanionConnectState _connectState =
       CompanionConnectState.disconnected;
+  OverlayEntry? _pcConnectionFailureOverlay;
   RobotTab _currentTab = RobotTab.chat;
   bool _agreementDialogVisible = false;
 
@@ -49,6 +55,14 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
   void initState() {
     super.initState();
     _checkAgreementAcceptance();
+    _initializePcConnection();
+  }
+
+  @override
+  void dispose() {
+    _pcConnectionFailureOverlay?.remove();
+    _bridgeController.dispose();
+    super.dispose();
   }
 
   @override
@@ -72,6 +86,8 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
     return switch (_currentTab) {
       RobotTab.chat => RobotHomePage(
           mood: _mood,
+          bridgeController: _bridgeController,
+          onPcConnectionFailed: _showPcConnectionFailureNotice,
         ),
       RobotTab.creativeWorkshop => const CreativeWorkshopPage(),
       RobotTab.settings => RobotSettingsPage(
@@ -116,5 +132,50 @@ class _CompanionRobotAppState extends State<CompanionRobotApp> {
     );
 
     _agreementDialogVisible = false;
+  }
+
+  Future<void> _initializePcConnection() async {
+    try {
+      await _llmSettingsStore.clearSelectedProfile();
+      final connected = await _bridgeController.connect();
+      if (!mounted || connected) {
+        return;
+      }
+
+      _showPcConnectionFailureNotice();
+    } catch (_) {
+      if (mounted) {
+        _showPcConnectionFailureNotice();
+      }
+    }
+  }
+
+  void _showPcConnectionFailureNotice() {
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showPcConnectionFailureNotice();
+        }
+      });
+      return;
+    }
+
+    _pcConnectionFailureOverlay?.remove();
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) {
+        return PcConnectionFailureOverlay(
+          onDismissed: () {
+            if (_pcConnectionFailureOverlay == entry) {
+              _pcConnectionFailureOverlay = null;
+            }
+            entry.remove();
+          },
+        );
+      },
+    );
+    _pcConnectionFailureOverlay = entry;
+    overlay.insert(entry);
   }
 }

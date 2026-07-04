@@ -7,13 +7,11 @@ import '../../../shared/theme/app_colors.dart';
 class MotaActionDrawer extends StatelessWidget {
   const MotaActionDrawer({
     required this.onOpenAi,
-    required this.onOpenBridge,
     required this.onOpenProject,
     super.key,
   });
 
   final VoidCallback onOpenAi;
-  final VoidCallback onOpenBridge;
   final VoidCallback onOpenProject;
 
   @override
@@ -46,20 +44,10 @@ class MotaActionDrawer extends StatelessWidget {
                 _MotaActionTile(
                   icon: Icons.auto_awesome_rounded,
                   title: 'AI 模型',
-                  subtitle: '选择或添加本地 API Key',
+                  subtitle: '选择 API 或个人电脑 Agent',
                   onTap: () {
                     Navigator.of(context).pop();
                     onOpenAi();
-                  },
-                ),
-                const SizedBox(height: 8),
-                _MotaActionTile(
-                  icon: Icons.computer_rounded,
-                  title: 'PC Bridge',
-                  subtitle: '连接 MotaLink Agent',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onOpenBridge();
                   },
                 ),
                 const SizedBox(height: 8),

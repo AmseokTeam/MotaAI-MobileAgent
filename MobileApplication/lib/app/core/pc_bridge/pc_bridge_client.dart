@@ -17,6 +17,8 @@ class PcBridgeClient {
 
   final WebSocketChannel _channel;
 
+  Future<void> get ready => _channel.ready;
+
   Stream<PcBridgeMessage> get messages {
     return _channel.stream.map((event) {
       if (event is String) {
