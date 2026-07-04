@@ -6,6 +6,7 @@
 .packages
 build/
 coverage/
+test/
 
 # Native build and packaging outputs
 *.apk
