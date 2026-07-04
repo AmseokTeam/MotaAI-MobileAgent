@@ -8,11 +8,13 @@ class MotaActionDrawer extends StatelessWidget {
   const MotaActionDrawer({
     required this.onOpenAi,
     required this.onOpenBridge,
+    required this.onOpenProject,
     super.key,
   });
 
   final VoidCallback onOpenAi;
   final VoidCallback onOpenBridge;
+  final VoidCallback onOpenProject;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +60,16 @@ class MotaActionDrawer extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).pop();
                     onOpenBridge();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _MotaActionTile(
+                  icon: Icons.account_tree_rounded,
+                  title: '项目文件',
+                  subtitle: '查看文件树、代码和 Git Diff',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onOpenProject();
                   },
                 ),
               ],

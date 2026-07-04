@@ -9,6 +9,7 @@ import '../controllers/mota_chat_controller.dart';
 import 'mota_action_drawer.dart';
 import 'mota_ai_drawer.dart';
 import 'mota_bridge_drawer.dart';
+import 'mota_project_drawer.dart';
 
 class MotaChatInput extends StatefulWidget {
   const MotaChatInput({
@@ -122,6 +123,7 @@ class _MotaChatInputState extends State<MotaChatInput> {
       builder: (context) => MotaActionDrawer(
         onOpenAi: _showAiDrawer,
         onOpenBridge: _showBridgeDrawer,
+        onOpenProject: _showProjectDrawer,
       ),
     );
   }
@@ -142,6 +144,18 @@ class _MotaChatInputState extends State<MotaChatInput> {
       showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (context) => MotaBridgeDrawer(
+        bridgeController: widget.bridgeController,
+      ),
+    );
+  }
+
+  Future<void> _showProjectDrawer() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: false,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MotaProjectDrawer(
         bridgeController: widget.bridgeController,
       ),
     );

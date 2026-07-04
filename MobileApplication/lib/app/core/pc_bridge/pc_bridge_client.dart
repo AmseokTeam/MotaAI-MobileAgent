@@ -78,6 +78,37 @@ class PcBridgeClient {
     });
   }
 
+  void listProject({
+    required String requestId,
+    required String path,
+  }) {
+    _send(<String, Object?>{
+      'type': 'project.list',
+      'requestId': requestId,
+      'path': path,
+    });
+  }
+
+  void readProjectFile({
+    required String requestId,
+    required String path,
+  }) {
+    _send(<String, Object?>{
+      'type': 'project.readFile',
+      'requestId': requestId,
+      'path': path,
+    });
+  }
+
+  void readGitDiff({
+    required String requestId,
+  }) {
+    _send(<String, Object?>{
+      'type': 'project.gitDiff',
+      'requestId': requestId,
+    });
+  }
+
   Future<void> close() {
     return _channel.sink.close(ws_status.normalClosure);
   }

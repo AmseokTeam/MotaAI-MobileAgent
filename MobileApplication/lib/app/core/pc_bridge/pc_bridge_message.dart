@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 
+import 'project_bridge_models.dart';
+
 class PcBridgeMessage {
   const PcBridgeMessage({
     required this.type,
@@ -10,6 +12,9 @@ class PcBridgeMessage {
     this.text,
     this.message,
     this.exitCode,
+    this.projectListing,
+    this.projectFile,
+    this.projectDiff,
   });
 
   factory PcBridgeMessage.fromJsonText(String text) {
@@ -23,13 +28,23 @@ class PcBridgeMessage {
       throw const FormatException('Bridge message type is invalid');
     }
 
+    final messageJson = Map<String, dynamic>.from(decoded);
     return PcBridgeMessage(
       type: type,
       requestId: _readString(decoded['requestId']),
       sessionId: _readString(decoded['sessionId']),
-      text: _readString(decoded['text']),
+      text: _readString(decoded['text'], allowEmpty: true),
       message: _readString(decoded['message']),
       exitCode: _readInt(decoded['exitCode']),
+      projectListing: type == 'project.list.result'
+          ? ProjectDirectoryListing.fromJson(messageJson)
+          : null,
+      projectFile: type == 'project.readFile.result'
+          ? ProjectFileContent.fromJson(messageJson)
+          : null,
+      projectDiff: type == 'project.gitDiff.result'
+          ? _readString(decoded['diff'], allowEmpty: true) ?? ''
+          : null,
     );
   }
 
@@ -39,6 +54,9 @@ class PcBridgeMessage {
   final String? text;
   final String? message;
   final int? exitCode;
+  final ProjectDirectoryListing? projectListing;
+  final ProjectFileContent? projectFile;
+  final String? projectDiff;
 }
 
 String encodePcBridgeMessage(Map<String, Object?> message) {
@@ -49,8 +67,8 @@ String encodePcBridgeMessage(Map<String, Object?> message) {
   );
 }
 
-String? _readString(Object? value) {
-  if (value is String && value.trim().isNotEmpty) {
+String? _readString(Object? value, {bool allowEmpty = false}) {
+  if (value is String && (allowEmpty || value.trim().isNotEmpty)) {
     return value;
   }
   return null;
