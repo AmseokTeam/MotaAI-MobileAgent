@@ -20,5 +20,47 @@ build/
 dist/
 out/
 
+# Flutter and Dart local state
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+coverage/
+pubspec.lock
+devtools_options.yaml
+
+# Native build and packaging outputs
+*.apk
+*.aab
+*.apks
+*.ipa
+*.xcarchive
+*.dSYM/
+android/.gradle/
+android/.kotlin/
+android/.cxx/
+android/app/debug/
+android/app/profile/
+android/app/release/
+ios/Pods/
+ios/.symlinks/
+
+# Generated Flutter platform files
+android/local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
+# Signing keys and certificates
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+
+# Local ASR model payloads. Keep large downloaded model files out of Git.
+assets/asr_models/**
+!assets/asr_models/
+!assets/asr_models/.gitkeep
+
 # Local duplicate workspace
 Mota.DeskAgentBot_new/
