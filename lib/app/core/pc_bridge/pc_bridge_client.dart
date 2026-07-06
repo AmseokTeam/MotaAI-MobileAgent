@@ -67,6 +67,21 @@ class PcBridgeClient {
     });
   }
 
+  void sendChat({
+    required String requestId,
+    required String cli,
+    required String cwd,
+    required String prompt,
+  }) {
+    _send(<String, Object?>{
+      'type': 'chat.send',
+      'requestId': requestId,
+      'cli': cli,
+      'cwd': cwd,
+      'prompt': prompt,
+    });
+  }
+
   void resize({
     required String sessionId,
     required int cols,

@@ -34,6 +34,7 @@ class PcBridgeController extends ChangeNotifier {
   StreamSubscription<PcBridgeMessage>? _messageSubscription;
   Completer<void>? _sessionCreationCompleter;
   _BridgeChatRequest? _activeChatRequest;
+  _DirectBridgeChatRequest? _activeDirectChatRequest;
   PcBridgeConnectionState _connectionState =
       PcBridgeConnectionState.disconnected;
   String? _sessionId;
@@ -45,6 +46,7 @@ class PcBridgeController extends ChangeNotifier {
   bool _creatingSession = false;
   bool _readingProjectFile = false;
   bool _loadingProjectDiff = false;
+  bool _directChatSupported = true;
 
   PcBridgeSettings get settings => _settings;
   PcBridgeConnectionState get connectionState => _connectionState;
@@ -80,6 +82,7 @@ class PcBridgeController extends ChangeNotifier {
     _settings = settings;
     await _settingsStore.writeSettings(settings);
     _settingsLoaded = true;
+    _directChatSupported = true;
     _clearError();
     notifyListeners();
   }
@@ -107,6 +110,7 @@ class PcBridgeController extends ChangeNotifier {
       );
       await client.ready.timeout(const Duration(seconds: 8));
       _connectionState = PcBridgeConnectionState.connected;
+      _directChatSupported = true;
       _appendTerminalLine('已连接 MotaLink Agent\n');
       notifyListeners();
       return true;
@@ -148,7 +152,7 @@ class PcBridgeController extends ChangeNotifier {
       return;
     }
 
-    if (_activeChatRequest != null) {
+    if (_activeChatRequest != null || _activeDirectChatRequest != null) {
       throw const PcBridgeChatException('个人电脑 AI Agent 正在回复，请稍后再试');
     }
 
@@ -159,6 +163,59 @@ class PcBridgeController extends ChangeNotifier {
       }
     }
 
+    if (_directChatSupported &&
+        await _tryStreamDirectChatPrompt(
+          prompt: trimmedPrompt,
+          onText: onText,
+        )) {
+      return;
+    }
+
+    await _streamSessionChatPrompt(prompt: trimmedPrompt, onText: onText);
+  }
+
+  Future<bool> _tryStreamDirectChatPrompt({
+    required String prompt,
+    required ValueChanged<String> onText,
+  }) async {
+    final client = _client;
+    if (client == null || !isConnected) {
+      throw const PcBridgeChatException('请先连接个人电脑 AI Agent');
+    }
+    if (!_settings.canCreateSession) {
+      throw const PcBridgeChatException('个人电脑 AI Agent 会话配置不完整');
+    }
+
+    final request = _DirectBridgeChatRequest(
+      requestId: _createRequestId(),
+      onText: onText,
+    );
+    _activeDirectChatRequest = request;
+    client.sendChat(
+      requestId: request.requestId,
+      cli: _settings.cli.trim(),
+      cwd: _settings.cwd.trim(),
+      prompt: prompt,
+    );
+
+    try {
+      await request.done;
+      return true;
+    } on _DirectBridgeChatUnsupportedException {
+      _directChatSupported = false;
+      return false;
+    } finally {
+      if (_activeDirectChatRequest == request) {
+        _activeDirectChatRequest = null;
+      }
+      request.dispose();
+    }
+  }
+
+  Future<void> _streamSessionChatPrompt({
+    required String prompt,
+    required ValueChanged<String> onText,
+  }) async {
     await _ensureChatSession();
     final client = _client;
     final sessionId = _sessionId;
@@ -167,11 +224,11 @@ class PcBridgeController extends ChangeNotifier {
     }
 
     final request = _BridgeChatRequest(
-      prompt: trimmedPrompt,
+      prompt: prompt,
       onText: onText,
     );
     _activeChatRequest = request;
-    client.sendInput(sessionId: sessionId, text: '$trimmedPrompt\n');
+    client.sendInput(sessionId: sessionId, text: '$prompt\n');
 
     try {
       await request.done;
@@ -402,6 +459,8 @@ class PcBridgeController extends ChangeNotifier {
         _sessionId = null;
         _creatingSession = false;
         _activeChatRequest?.finish();
+      case 'chat.result':
+        _handleDirectChatResult(message);
       case 'project.list.result':
         _handleProjectListing(message);
       case 'project.readFile.result':
@@ -409,7 +468,7 @@ class PcBridgeController extends ChangeNotifier {
       case 'project.gitDiff.result':
         _handleProjectDiff(message);
       case 'error':
-        if (!_handleProjectError(message)) {
+        if (!_handleDirectChatError(message) && !_handleProjectError(message)) {
           final errorMessage = message.message ?? 'MotaLink Agent 返回错误';
           _creatingSession = false;
           _failSessionCreation(errorMessage);
@@ -448,6 +507,10 @@ class PcBridgeController extends ChangeNotifier {
     final request = _activeChatRequest;
     _activeChatRequest = null;
     request?.fail(PcBridgeChatException(message));
+
+    final directRequest = _activeDirectChatRequest;
+    _activeDirectChatRequest = null;
+    directRequest?.fail(PcBridgeChatException(message));
   }
 
   void _appendTerminalLine(String text) {
@@ -506,6 +569,32 @@ class PcBridgeController extends ChangeNotifier {
     _loadingProjectDiff = false;
     _projectDiff = message.projectDiff ?? '';
     _projectErrorText = null;
+  }
+
+  void _handleDirectChatResult(PcBridgeMessage message) {
+    final request = _activeDirectChatRequest;
+    if (request == null || request.requestId != message.requestId) {
+      return;
+    }
+
+    request.completeText(message.text ?? '');
+  }
+
+  bool _handleDirectChatError(PcBridgeMessage message) {
+    final request = _activeDirectChatRequest;
+    if (request == null || request.requestId != message.requestId) {
+      return false;
+    }
+
+    final code = message.code;
+    if (code == 'unknown_message_type' || code == 'unsupported_chat_cli') {
+      request.unsupported();
+      return true;
+    }
+
+    request
+        .fail(PcBridgeChatException(message.message ?? 'MotaLink Agent 返回错误'));
+    return true;
   }
 
   bool _handleProjectError(PcBridgeMessage message) {
@@ -582,6 +671,60 @@ class PcBridgeChatException implements Exception {
   const PcBridgeChatException(this.message);
 
   final String message;
+}
+
+class _DirectBridgeChatUnsupportedException implements Exception {
+  const _DirectBridgeChatUnsupportedException();
+}
+
+class _DirectBridgeChatRequest {
+  _DirectBridgeChatRequest({
+    required this.requestId,
+    required this.onText,
+  }) {
+    _overallTimer = Timer(
+      const Duration(seconds: 180),
+      () => fail(const PcBridgeChatException('个人电脑 AI Agent 响应超时')),
+    );
+  }
+
+  final String requestId;
+  final ValueChanged<String> onText;
+  final Completer<void> _completer = Completer<void>();
+  Timer? _overallTimer;
+
+  Future<void> get done => _completer.future;
+
+  void completeText(String text) {
+    if (_completer.isCompleted) {
+      return;
+    }
+
+    final displayText = text.trimRight();
+    if (displayText.trim().isNotEmpty) {
+      onText(displayText);
+    }
+    _completer.complete();
+    dispose();
+  }
+
+  void unsupported() {
+    fail(const _DirectBridgeChatUnsupportedException());
+  }
+
+  void fail(Object error) {
+    if (_completer.isCompleted) {
+      return;
+    }
+
+    _completer.completeError(error);
+    dispose();
+  }
+
+  void dispose() {
+    _overallTimer?.cancel();
+    _overallTimer = null;
+  }
 }
 
 class _BridgeChatRequest {
