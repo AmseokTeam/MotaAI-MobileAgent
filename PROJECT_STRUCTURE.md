@@ -1,4 +1,4 @@
-# Milo-AI Flutter 文件结构说明
+# MotaAI Flutter 文件结构说明
 
 ## 入口层
 
@@ -39,42 +39,28 @@
 
 ## 首页与机器人屏幕
 
-- `lib/app/features/robot_face/pages/robot_home_page.dart`
-  - 首页页面编排，只组合顶部、机器人卡片、AI/蓝牙操作、表情网格、最近活动。
-- `lib/app/features/robot_face/widgets/home_header.dart`
-  - 首页顶部问候语和菜单按钮。
-- `lib/app/features/robot_face/widgets/robot_hero_card.dart`
-  - 首页黑色机器人屏幕卡片。
-- `lib/app/features/robot_face/widgets/mood_grid.dart`
-  - 表情按钮网格。
-- `lib/app/features/robot_face/widgets/robot_face_canvas.dart`
-  - 机器人脸部、首页机器人预览、横屏沉浸机器人屏幕的绘制逻辑。
-- `lib/app/features/robot_face/pages/immersive_robot_page.dart`
-  - 横屏全屏机器人页面。
-- `lib/app/features/robot_face/models/companion_bot_mood.dart`
+- `lib/app/pages/home/home_page.dart`
+  - 首页页面编排，组合机器人预览、聊天记录和输入框。
+- `lib/app/pages/home/widgets/robot_face_canvas.dart`
+  - 机器人脸部和首页机器人预览的绘制逻辑。
+- `lib/app/pages/home/models/companion_bot_mood.dart`
   - 机器人表情枚举、表情颜色、标题文案。
 
-## 蓝牙模块
+## PC 连接与 AI 对话
 
-- `lib/app/core/bluetooth/bluetooth_device_info.dart`
-  - 蓝牙设备基础数据模型。
-- `lib/app/core/bluetooth/bluetooth_discovery_service.dart`
-  - 蓝牙发现服务，目前仍是模拟数据入口，后续真实蓝牙扫描优先改这里。
-- `lib/app/features/bluetooth/models/companion_connect_state.dart`
-  - 蓝牙连接状态。
-- `lib/app/features/bluetooth/pages/robot_bluetooth_page.dart`
-  - 蓝牙扫描、设备列表、连接弹窗页面。
+- `lib/app/core/pc_bridge/`
+  - MotaLink Agent WebSocket 协议、连接控制、项目文件和 Git diff 能力。
+- `lib/app/core/llm/`
+  - 自定义大模型配置存储和 Chat Completions 请求。
+- `lib/app/pages/home/controllers/mota_chat_controller.dart`
+  - 管理 Mota 文本对话发送状态和回复流。
 
 ## 控制与设置
 
-- `lib/app/features/bot_control/models/companion_move_command.dart`
-  - 移动指令模型。
-- `lib/app/features/bot_control/pages/robot_control_page.dart`
-  - Move 控制页面。
-- `lib/app/features/settings/pages/robot_settings_page.dart`
+- `lib/app/pages/creative_workshop/creative_workshop_page.dart`
+  - 创意工坊页面。
+- `lib/app/pages/set/set_page.dart`
   - Settings 页面。
-- `lib/app/features/guide/pages/robot_beginner_guide_page.dart`
-  - Guide 新手文档页面。
 
 ## 平台目录
 

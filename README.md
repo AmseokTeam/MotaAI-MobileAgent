@@ -72,7 +72,7 @@
 
 ## 移动端应用
 
-Flutter 客户端：[`MobileApplication`](MobileApplication)
+Flutter 客户端位于仓库根目录
 
 ---
 

@@ -52,7 +52,7 @@ For a fast walkthrough of the repository layout and Dart core modules, see [Proj
 
 ## Mobile Application
 
-Flutter client: [`MobileApplication`](../MobileApplication).
+The Flutter client now lives at the repository root.
 
 ---
 

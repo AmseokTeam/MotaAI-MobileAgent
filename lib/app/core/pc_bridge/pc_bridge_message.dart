@@ -10,6 +10,7 @@ class PcBridgeMessage {
     this.requestId,
     this.sessionId,
     this.text,
+    this.code,
     this.message,
     this.exitCode,
     this.projectListing,
@@ -34,6 +35,7 @@ class PcBridgeMessage {
       requestId: _readString(decoded['requestId']),
       sessionId: _readString(decoded['sessionId']),
       text: _readString(decoded['text'], allowEmpty: true),
+      code: _readString(decoded['code']),
       message: _readString(decoded['message']),
       exitCode: _readInt(decoded['exitCode']),
       projectListing: type == 'project.list.result'
@@ -52,6 +54,7 @@ class PcBridgeMessage {
   final String? requestId;
   final String? sessionId;
   final String? text;
+  final String? code;
   final String? message;
   final int? exitCode;
   final ProjectDirectoryListing? projectListing;
