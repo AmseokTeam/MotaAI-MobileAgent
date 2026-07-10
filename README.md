@@ -78,10 +78,6 @@ Flutter 客户端位于仓库根目录
 
 ## Star 历史
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&theme=dark&legend=top-left" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&legend=top-left" />
-  <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&legend=top-left" />
-</picture>
+[![Star History Chart](https://api.star-history.com/svg?repos=amseokteam/motaai-mobileagent&type=Date)](https://star-history.com/#amseokteam/motaai-mobileagent&Date)
 
-[实时图表](https://www.star-history.com/AmseokTeam/MotaAI-MobileAgent)
+[实时图表](https://star-history.com/#amseokteam/motaai-mobileagent&Date)
