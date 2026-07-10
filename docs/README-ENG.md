@@ -58,10 +58,6 @@ The Flutter client now lives at the repository root.
 
 ## Star History
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&theme=dark&legend=top-left" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&legend=top-left" />
-  <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=AmseokTeam/MotaAI-MobileAgent&type=date&legend=top-left" />
-</picture>
+[![Star History Chart](https://api.star-history.com/svg?repos=amseokteam/motaai-mobileagent&type=Date)](https://star-history.com/#amseokteam/motaai-mobileagent&Date)
 
-[Live chart](https://www.star-history.com/AmseokTeam/MotaAI-MobileAgent)
+[Live chart](https://star-history.com/#amseokteam/motaai-mobileagent&Date)
